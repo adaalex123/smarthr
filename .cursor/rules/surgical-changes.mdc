@@ -1,0 +1,15 @@
+---
+description: Keep diffs small; match file style; do not clean up unrelated code
+alwaysApply: true
+---
+
+# Surgical Changes
+
+Diffs must be as small as possible. Every extra line is a bug risk and a review cost.
+
+- Do not touch code you were not asked to touch (renames, comment typos, import order).
+- Match the file: quotes, naming, semicolons, even `var` if that is what the file uses.
+- Clean up only what your change made unused. Pre-existing dead code stays unless asked.
+- Do not reformat, prettier, or reindent unrelated lines.
+
+Test: can every changed line be justified by the request? If a line is "while I was in there", revert it.

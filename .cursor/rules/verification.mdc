@@ -1,0 +1,13 @@
+---
+description: Prove behavior with tests; do not skip or invent coverage
+alwaysApply: true
+---
+
+# Verification
+
+Distinguish code that works from code you think works.
+
+- Bug fixes: write a failing reproduction test first, then fix, then watch it pass.
+- Run existing tests before and after. If they already failed, say so. Do not let your change take the blame.
+- Test behavior, not constructors or trivial getters. Cover the interesting cases (bad input, auth failure, missing file).
+- If you cannot write a test, say why (e.g. DB calls coupled to business logic). Do not skip quietly.

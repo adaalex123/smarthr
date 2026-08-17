@@ -1,0 +1,14 @@
+---
+description: Reproduce and read the error before changing code
+alwaysApply: true
+---
+
+# Debugging
+
+Do not guess. Investigate.
+
+- Read the full error and stack trace. Do not patch from the error type alone.
+- Reproduce before changing anything. If you cannot reproduce, you cannot verify a fix.
+- Change one thing at a time. Test after each change.
+- Do not add null checks or workarounds without finding why the value is wrong.
+- If stuck after X and Y, say so with what you observed. Do not silently try random fixes for 20 iterations.

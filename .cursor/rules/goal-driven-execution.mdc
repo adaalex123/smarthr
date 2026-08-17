@@ -1,0 +1,15 @@
+---
+description: Make success criteria specific and state a plan before multi-step work
+alwaysApply: true
+---
+
+# Goal-Driven Execution
+
+Every task needs a verifiable success criterion before coding. If it is vague, make it specific or ask.
+
+Examples:
+- "Add validation" → reject missing/invalid email, return 400 with a field message, test both cases
+- "Fix the bug" → failing repro test, then pass, then existing tests still pass
+- "Improve performance" → profile, fix the bottleneck, measure again
+
+For multi-step work, state the plan first (migration, model, endpoint, validation, tests, regression run) so mistakes can be caught before implementation.

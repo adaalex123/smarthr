@@ -1,0 +1,13 @@
+---
+description: Make success criteria specific and state a plan before multi-step work
+alwaysApply: true
+---
+
+# Goal-Driven Execution
+
+Every task needs a verifiable success criterion before code.
+
+- Vague → specific: "add validation" becomes "reject missing/invalid email with 400 naming the field; tests for both cases".
+- Multi-step work: state the plan first (schema, model, endpoint, validation, tests, regression run) so the user can stop a bad approach early.
+
+Do not dive in and figure it out as you go.

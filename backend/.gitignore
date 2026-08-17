@@ -6,7 +6,15 @@ yarn.lock
 # Environment
 .env
 .env.local
+.env.development
+.env.production
+.env.staging
+.env.test
 .env.*.local
+!.env.example
+
+# Firebase service account
+*firebase-adminsdk*.json
 
 # Database
 *.db
@@ -35,6 +43,7 @@ Thumbs.db
 # Build
 dist/
 build/
+generated/
 *.tsbuildinfo
 
 # Coverage
@@ -45,4 +54,3 @@ coverage/
 *.pem
 *.key
 *.cert
-.env.*

@@ -1,0 +1,16 @@
+---
+description: Do not add packages silently; prefer existing libs and the standard library
+alwaysApply: true
+---
+
+# Dependencies
+
+Do not add a package without saying why.
+
+Before adding one:
+
+- Use what the project already has (axios vs node-fetch, date-fns vs moment).
+- Prefer the standard library (`Array.prototype.map`, `crypto.randomUUID()`).
+- Check that the package is maintained and not huge for a tiny job.
+
+Silent `package.json` edits are not allowed. Example of an allowed reason: "adding zod because this repo needs runtime schema validation and nothing here does that."

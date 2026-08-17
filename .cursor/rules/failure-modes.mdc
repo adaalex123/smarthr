@@ -1,0 +1,16 @@
+---
+description: Stop kitchen-sink refactors, invisible decisions, and style drift
+alwaysApply: true
+---
+
+# Common Failure Modes
+
+Stop if you catch yourself doing any of these:
+
+- **Kitchen sink** — one feature, not a drive-by restructure.
+- **Wrong abstraction** — copy-paste twice before abstracting.
+- **Invisible decision** — flag schema, API shape, and auth choices before committing to them.
+- **Optimistic path** — handle 500s, missing files, empty forms, not only the happy path.
+- **Knowledge hallucination** — if you are not sure a method/signature exists, check docs or source.
+- **Style drift** — match this repo. Do not write TS style into existing JS files unless asked to convert them.
+- **Runaway refactor** — if a fix cascades past a few files, stop and get buy-in.

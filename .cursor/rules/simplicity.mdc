@@ -1,0 +1,15 @@
+---
+description: Write the minimum code that solves this problem now
+alwaysApply: true
+---
+
+# Simplicity
+
+Write the minimum code that solves this specific problem right now.
+
+- No premature abstraction. One email type → `sendWelcomeEmail(user)`, not an EmailService with providers and templates.
+- Only handle errors that can actually occur. Do not wrap already-validated internal values.
+- Hardcode until there is a real reason for config. Every env var is a decision someone must get right.
+- No interfaces, ABCs, or generics with a single implementation.
+
+If the answer to "why is this abstracted?" is "in case we need to…", revert the abstraction. That is not a requirement.

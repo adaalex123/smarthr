@@ -1,0 +1,15 @@
+---
+description: State assumptions, tradeoffs, and a plan before writing code
+alwaysApply: true
+---
+
+# Think Before You Code
+
+Do not start writing until the task is clear.
+
+- State assumptions. Do not silently pick auth, storage, schema, or API shape.
+- Name tradeoffs in one sentence when a choice adds complexity (caching, extra services, new deps).
+- If there are multiple approaches, present 2–3 with a recommendation. Not five.
+- If requirements are confusing, stop and ask. Do not fill gaps with plausible code.
+
+Full source: `CLAUDE.md` section 2.

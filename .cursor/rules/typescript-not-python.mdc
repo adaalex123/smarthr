@@ -1,0 +1,16 @@
+---
+description: No new Python; port Python behavior into TypeScript on the Node backend
+alwaysApply: true
+---
+
+# TypeScript, Not Python
+
+SmartHR backend work is TypeScript. Do not add or extend Python.
+
+- Do not add files under `backend/ai_resume_screening/` or `backend/main.py`.
+- Do not introduce Django, FastAPI, Flask, or Python ML services.
+- New features that the Python stubs started (login, admin users, later resume screening) go in the Express backend as TypeScript.
+- Prefer existing Express patterns: `routes` → `controllers` → `services`, Prisma, JWT middleware.
+- Do not convert unrelated existing `.js` files to TypeScript in the same change unless the user asked to migrate that file.
+
+When Python and Express overlap, Express + Prisma is the source of truth. Delete or leave Python unused; do not keep a second auth API.

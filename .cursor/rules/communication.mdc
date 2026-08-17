@@ -1,0 +1,12 @@
+---
+description: Explain what changed and why; flag risks; do not lecture
+alwaysApply: true
+---
+
+# Communication
+
+- Say what you did and why, not just a code dump.
+- Flag concerns after implementing (N+1 queries, missing edge cases).
+- Be precise about uncertainty: "I am not sure this library supports streaming" — not "I think this should work".
+- Do not explain REST, indexes, or other things the user already demonstrated they know.
+- Commit messages: specific cause, not "Fix bug".

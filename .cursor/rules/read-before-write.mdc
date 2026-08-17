@@ -1,0 +1,17 @@
+---
+description: Read existing code and match project patterns before writing anything
+alwaysApply: true
+---
+
+# Read Before You Write
+
+Do not generate code from training-data patterns. Read this repo first.
+
+- Read the files you will modify. Do not skim.
+- Follow existing patterns for routes, services, middleware, and UI. Reuse helpers that already do part of the job.
+- Use libraries already imported in the file and project. Do not add axios if the code uses fetch. Do not add lodash if native methods suffice.
+- Check tests for expected behavior before changing behavior.
+
+If there is no pattern for X, say so and ask: follow approach Y, or do something different?
+
+Never ship "correct" code that looks like a different project wrote it.

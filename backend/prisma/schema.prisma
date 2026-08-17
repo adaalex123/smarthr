@@ -1,17 +1,16 @@
-// prisma/schema.prisma
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"
+  output   = "../generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 enum Role {
-  candidate
-  recruiter
   admin
+  employer
+  recruiter
 }
 
 enum UserStatus {
@@ -21,19 +20,23 @@ enum UserStatus {
 }
 
 model User {
-  id          Int        @id @default(autoincrement())
-  fullName    String
-  email       String     @unique
-  phone       String?
-  password    String
-  role        Role       @default(candidate)
-  status      UserStatus @default(active)
-  resetToken  String?
+  id               Int            @id @default(autoincrement())
+  fullName         String
+  email            String         @unique
+  phone            String?
+  password         String?
+  role             Role           @default(employer)
+  status           UserStatus     @default(active)
+  provider         String         @default("local")
+  providerId       String?
+  resetToken       String?
   resetTokenExpiry DateTime?
-  refreshToken String?
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  refreshTokens    RefreshToken[]
+  auditLogs        AuditLog[]
 
+  @@unique([provider, providerId])
   @@map("users")
 }
 
@@ -41,7 +44,7 @@ model RefreshToken {
   id        Int      @id @default(autoincrement())
   token     String   @unique
   userId    Int
-  user      User     @relation(fields: [userId], references: [id], onDelete: CASCADE)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   expiresAt DateTime
   createdAt DateTime @default(now())
 
