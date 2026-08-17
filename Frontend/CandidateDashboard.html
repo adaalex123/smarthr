@@ -1,0 +1,1242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SmartHR · Candidate Dashboard</title>
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <!-- Chart.js for the trend chart -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* ... (keep all existing styles from previous version) ... */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background: #f4f7fc;
+            min-height: 100vh;
+            display: flex;
+        }
+
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            width: 260px;
+            background: #0b1a33;
+            color: white;
+            padding: 1.8rem 1.2rem;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 100;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .sidebar .logo i {
+            color: #6fc2ff;
+            font-size: 1.8rem;
+        }
+
+        .sidebar .user-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            background: rgba(255, 255, 255, 0.06);
+            padding: 0.8rem 1rem;
+            border-radius: 14px;
+            margin-bottom: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .sidebar .user-badge .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #2563eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .sidebar .user-badge .user-info {
+            flex: 1;
+        }
+
+        .sidebar .user-badge .user-info .name {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .sidebar .user-badge .user-info .role {
+            font-size: 0.7rem;
+            opacity: 0.6;
+        }
+
+        .sidebar .nav-section {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            opacity: 0.4;
+            margin: 0.8rem 0 0.5rem;
+        }
+
+        .sidebar nav a {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            padding: 0.6rem 0.8rem;
+            border-radius: 10px;
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: 0.15s;
+            margin-bottom: 0.2rem;
+        }
+
+        .sidebar nav a i {
+            width: 1.2rem;
+            text-align: center;
+            font-size: 1rem;
+        }
+
+        .sidebar nav a:hover,
+        .sidebar nav a.active {
+            background: rgba(255, 255, 255, 0.08);
+            color: white;
+        }
+
+        .sidebar nav a.active {
+            background: rgba(37, 99, 235, 0.25);
+            border-left: 3px solid #2563eb;
+        }
+
+        .sidebar .bottom-links {
+            margin-top: auto;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .sidebar .bottom-links a {
+            color: rgba(255, 255, 255, 0.5);
+            text-decoration: none;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.4rem 0;
+        }
+
+        .sidebar .bottom-links a:hover {
+            color: white;
+        }
+
+        /* ===== MAIN CONTENT ===== */
+        .main-content {
+            margin-left: 260px;
+            flex: 1;
+            padding: 1.5rem 2rem 2rem;
+            min-height: 100vh;
+        }
+
+        /* top bar */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .top-bar .greeting h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #0b1a33;
+        }
+
+        .top-bar .greeting p {
+            color: #4a5b74;
+            font-size: 0.85rem;
+        }
+
+        .top-bar .actions {
+            display: flex;
+            gap: 0.8rem;
+            align-items: center;
+        }
+
+        .top-bar .actions .icon-btn {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 40px;
+            padding: 0.4rem 0.9rem;
+            font-size: 0.8rem;
+            color: #1d2d44;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: 0.1s;
+        }
+
+        .top-bar .actions .icon-btn:hover {
+            background: #f0f4fe;
+            border-color: #2563eb;
+        }
+
+        .top-bar .actions .icon-btn i {
+            font-size: 1rem;
+        }
+
+        .hamburger {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #0b1a33;
+            cursor: pointer;
+        }
+
+        /* ===== DASHBOARD GRID ===== */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 1.2rem 1.5rem 1.5rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+            border: 1px solid #edf2f9;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.8rem;
+        }
+
+        .card-header h3 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #1d2d44;
+        }
+
+        .card-header a {
+            font-size: 0.75rem;
+            color: #2563eb;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .card-header a:hover {
+            text-decoration: underline;
+        }
+
+        /* AI Resume Score */
+        .resume-score-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 0.8rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .score-item {
+            background: #f8faff;
+            border-radius: 14px;
+            padding: 0.8rem;
+            text-align: center;
+        }
+
+        .score-item .score {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #0b1a33;
+        }
+
+        .score-item .label {
+            font-size: 0.7rem;
+            color: #4a5b74;
+        }
+
+        .score-item .badge {
+            display: inline-block;
+            background: #1f9d6a;
+            color: white;
+            font-size: 0.6rem;
+            padding: 0.1rem 0.6rem;
+            border-radius: 40px;
+            margin-top: 0.1rem;
+        }
+
+        /* Application Overview */
+        .app-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 0.5rem;
+        }
+
+        .app-stat {
+            text-align: center;
+            padding: 0.4rem;
+        }
+
+        .app-stat .number {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #0b1a33;
+        }
+
+        .app-stat .label {
+            font-size: 0.65rem;
+            color: #4a5b74;
+        }
+
+        /* Recommended Jobs */
+        .job-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+        }
+
+        .job-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.6rem 0.8rem;
+            background: #f8faff;
+            border-radius: 12px;
+            border-left: 3px solid #2563eb;
+        }
+
+        .job-item .job-info .title {
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #0b1a33;
+        }
+
+        .job-item .job-info .company {
+            font-size: 0.7rem;
+            color: #4a5b74;
+        }
+
+        .job-item .job-meta {
+            text-align: right;
+        }
+
+        .job-item .job-meta .type {
+            font-size: 0.65rem;
+            background: #e9f0fe;
+            padding: 0.1rem 0.6rem;
+            border-radius: 40px;
+            color: #2563eb;
+        }
+
+        .job-item .job-meta .match {
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #1f9d6a;
+        }
+
+        .job-item .job-meta .date {
+            font-size: 0.6rem;
+            color: #7a8aa0;
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.6rem;
+        }
+
+        .quick-action {
+            background: #f8faff;
+            border-radius: 14px;
+            padding: 0.8rem;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.1s;
+            border: 1px solid transparent;
+        }
+
+        .quick-action:hover {
+            border-color: #2563eb;
+            background: #e9f0fe;
+        }
+
+        .quick-action i {
+            font-size: 1.2rem;
+            color: #2563eb;
+            margin-bottom: 0.2rem;
+        }
+
+        .quick-action .action-label {
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #1d2d44;
+        }
+
+        .quick-action .action-desc {
+            font-size: 0.6rem;
+            color: #7a8aa0;
+        }
+
+        /* Application Trend (chart) */
+        .chart-container {
+            height: 120px;
+            position: relative;
+        }
+
+        /* Top Skills */
+        .skills-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .skills-list .skill {
+            background: #e9f0fe;
+            padding: 0.3rem 0.9rem;
+            border-radius: 40px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: #1d2d44;
+        }
+
+        /* Recent Activity */
+        .activity-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .activity-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            padding: 0.3rem 0;
+            border-bottom: 1px solid #f0f4fc;
+        }
+
+        .activity-item .activity-text {
+            color: #1d2d44;
+        }
+
+        .activity-item .activity-text i {
+            color: #2563eb;
+            margin-right: 0.4rem;
+            width: 1.2rem;
+        }
+
+        .activity-item .time {
+            font-size: 0.65rem;
+            color: #7a8aa0;
+        }
+
+        /* Notifications */
+        .notification-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .notification-item {
+            display: flex;
+            gap: 0.6rem;
+            padding: 0.4rem 0.6rem;
+            background: #f8faff;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            align-items: flex-start;
+        }
+
+        .notification-item i {
+            color: #2563eb;
+            margin-top: 0.1rem;
+        }
+
+        .notification-item .notif-text {
+            flex: 1;
+            color: #1d2d44;
+        }
+
+        .notification-item .notif-time {
+            font-size: 0.6rem;
+            color: #7a8aa0;
+            white-space: nowrap;
+        }
+
+        /* Profile completion */
+        .profile-completion {
+            background: linear-gradient(135deg, #0b1a33, #142b4b);
+            color: white;
+            border-radius: 20px;
+            padding: 1.2rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .profile-completion .completion-text {
+            font-size: 0.85rem;
+        }
+
+        .profile-completion .completion-text strong {
+            font-size: 1.1rem;
+        }
+
+        .profile-completion .completion-bar {
+            flex: 1;
+            max-width: 300px;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .profile-completion .completion-bar .fill {
+            height: 100%;
+            width: 85%;
+            background: #6fc2ff;
+            border-radius: 10px;
+        }
+
+        .profile-completion .completion-btn {
+            background: white;
+            color: #0b1a33;
+            border: none;
+            padding: 0.4rem 1.2rem;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: 0.15s;
+        }
+
+        .profile-completion .completion-btn:hover {
+            transform: scale(1.02);
+        }
+
+        /* full width cards */
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        /* Loading State */
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+        .loading-spinner.active {
+            display: block;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #2563eb;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1024px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            .full-width {
+                grid-column: 1;
+            }
+            .resume-score-grid {
+                grid-template-columns: 1fr 1fr 1fr;
+            }
+            .app-stats {
+                grid-template-columns: 1fr 1fr 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                width: 280px;
+            }
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            .main-content {
+                margin-left: 0;
+                padding: 1rem;
+            }
+            .hamburger {
+                display: block;
+            }
+            .top-bar .greeting h1 {
+                font-size: 1.2rem;
+            }
+            .resume-score-grid {
+                grid-template-columns: 1fr 1fr 1fr;
+            }
+            .app-stats {
+                grid-template-columns: 1fr 1fr;
+            }
+            .quick-actions {
+                grid-template-columns: 1fr 1fr;
+            }
+            .profile-completion {
+                flex-direction: column;
+                align-items: stretch;
+                text-align: center;
+            }
+            .profile-completion .completion-bar {
+                max-width: 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .resume-score-grid {
+                grid-template-columns: 1fr;
+            }
+            .app-stats {
+                grid-template-columns: 1fr 1fr;
+            }
+            .quick-actions {
+                grid-template-columns: 1fr;
+            }
+            .job-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.3rem;
+            }
+            .job-item .job-meta {
+                text-align: left;
+                width: 100%;
+            }
+            .top-bar .actions .icon-btn span {
+                display: none;
+            }
+        }
+
+        /* overlay for mobile */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.3);
+            z-index: 99;
+        }
+        .sidebar-overlay.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- SIDEBAR -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <aside class="sidebar" id="sidebar">
+        <div class="logo">
+            <i class="fas fa-brain"></i> SmartHR
+        </div>
+
+        <div class="user-badge" id="userBadge">
+            <div class="avatar" id="userAvatar">A</div>
+            <div class="user-info">
+                <div class="name" id="userName">Ada Johnson</div>
+                <div class="role" id="userRole">Candidate</div>
+            </div>
+        </div>
+
+        <div class="nav-section">Main</div>
+        <nav>
+            <a href="#" class="active"><i class="fas fa-chart-pie"></i> Dashboard</a>
+            <a href="#"><i class="fas fa-search"></i> Browse Jobs</a>
+            <a href="#"><i class="fas fa-file-alt"></i> My Applications</a>
+            <a href="#"><i class="fas fa-bookmark"></i> Saved Jobs</a>
+            <a href="#"><i class="fas fa-file-pdf"></i> Resume</a>
+            <a href="#"><i class="fas fa-robot"></i> AI Resume Feedback</a>
+            <a href="#"><i class="fas fa-calendar-check"></i> Interview Invitations</a>
+            <a href="#"><i class="fas fa-envelope"></i> Messages</a>
+            <a href="#"><i class="fas fa-bell"></i> Notifications</a>
+            <a href="#"><i class="fas fa-user"></i> Profile</a>
+        </nav>
+
+        <div class="nav-section">System</div>
+        <nav>
+            <a href="#"><i class="fas fa-cog"></i> Settings</a>
+        </nav>
+
+        <div class="bottom-links">
+            <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
+
+        <!-- Loading Spinner -->
+        <div class="loading-spinner" id="loadingSpinner">
+            <div class="spinner"></div>
+            <p style="margin-top: 1rem; color: #4a5b74;">Loading dashboard...</p>
+        </div>
+
+        <!-- Dashboard Content -->
+        <div id="dashboardContent" style="display: none;">
+            <!-- TOP BAR -->
+            <div class="top-bar">
+                <div class="greeting">
+                    <button class="hamburger" id="hamburgerBtn"><i class="fas fa-bars"></i></button>
+                    <h1 id="welcomeMessage">Welcome back, Ada! 🎉</h1>
+                    <p>Good morning! Here's what's happening with your career today.</p>
+                </div>
+                <div class="actions">
+                    <button class="icon-btn"><i class="fas fa-search"></i> <span>Search</span></button>
+                    <button class="icon-btn"><i class="fas fa-bell"></i> <span>Notifications</span></button>
+                    <button class="icon-btn"><i class="fas fa-user-circle"></i> <span>Profile</span></button>
+                </div>
+            </div>
+
+            <!-- PROFILE COMPLETION BANNER -->
+            <div class="profile-completion">
+                <div class="completion-text">
+                    <strong>Your profile is 85% complete</strong><br />
+                    Complete your profile to get up to 3x more interview opportunities.
+                </div>
+                <div class="completion-bar">
+                    <div class="fill"></div>
+                </div>
+                <button class="completion-btn">Complete Profile →</button>
+            </div>
+
+            <!-- DASHBOARD GRID -->
+            <div class="dashboard-grid">
+                <!-- AI Resume Score -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-robot" style="color:#2563eb;"></i> AI Resume Score</h3>
+                        <a href="#">View Full Feedback →</a>
+                    </div>
+                    <div class="resume-score-grid">
+                        <div class="score-item">
+                            <div class="score">92%</div>
+                            <div class="label">Overall</div>
+                            <span class="badge">Excellent</span>
+                        </div>
+                        <div class="score-item">
+                            <div class="score">95%</div>
+                            <div class="label">Skills</div>
+                            <span class="badge">Excellent</span>
+                        </div>
+                        <div class="score-item">
+                            <div class="score">98%</div>
+                            <div class="label">Experience</div>
+                            <span class="badge">Excellent</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Application Overview -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-briefcase" style="color:#2563eb;"></i> Application Overview</h3>
+                        <a href="#">View All Applications →</a>
+                    </div>
+                    <div class="app-stats">
+                        <div class="app-stat">
+                            <div class="number">14</div>
+                            <div class="label">Applied</div>
+                        </div>
+                        <div class="app-stat">
+                            <div class="number">5</div>
+                            <div class="label">Under Review</div>
+                        </div>
+                        <div class="app-stat">
+                            <div class="number">2</div>
+                            <div class="label">Interview</div>
+                        </div>
+                        <div class="app-stat">
+                            <div class="number">1</div>
+                            <div class="label">Offer</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recommended Jobs -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-star" style="color:#f59e0b;"></i> Recommended Jobs for You</h3>
+                        <a href="#">View All →</a>
+                    </div>
+                    <div class="job-list">
+                        <div class="job-item">
+                            <div class="job-info">
+                                <div class="title">AI Engineer</div>
+                                <div class="company">Google · Lagos, Nigeria</div>
+                            </div>
+                            <div class="job-meta">
+                                <span class="type">Full-time</span>
+                                <div class="match">93% match</div>
+                                <div class="date">Posted 3 days ago</div>
+                            </div>
+                        </div>
+                        <div class="job-item">
+                            <div class="job-info">
+                                <div class="title">Data Scientist</div>
+                                <div class="company">Microsoft · Abuja, Nigeria</div>
+                            </div>
+                            <div class="job-meta">
+                                <span class="type">Full-time</span>
+                                <div class="match">93% match</div>
+                                <div class="date">Posted 1 day ago</div>
+                            </div>
+                        </div>
+                        <div class="job-item">
+                            <div class="job-info">
+                                <div class="title">Machine Learning Engineer</div>
+                                <div class="company">Flutterwave · Lagos, Nigeria</div>
+                            </div>
+                            <div class="job-meta">
+                                <span class="type">Full-time</span>
+                                <div class="match">93% match</div>
+                                <div class="date">Posted 2 days ago</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-bolt" style="color:#f59e0b;"></i> Quick Actions</h3>
+                    </div>
+                    <div class="quick-actions">
+                        <div class="quick-action">
+                            <i class="fas fa-upload"></i>
+                            <div class="action-label">Upload / Update Resume</div>
+                            <div class="action-desc">Keep your resume updated</div>
+                        </div>
+                        <div class="quick-action">
+                            <i class="fas fa-search"></i>
+                            <div class="action-label">Browse Jobs</div>
+                            <div class="action-desc">Find jobs that match you</div>
+                        </div>
+                        <div class="quick-action">
+                            <i class="fas fa-robot"></i>
+                            <div class="action-label">AI Resume Feedback</div>
+                            <div class="action-desc">Improve your resume score</div>
+                        </div>
+                        <div class="quick-action">
+                            <i class="fas fa-bookmark"></i>
+                            <div class="action-label">Saved Jobs</div>
+                            <div class="action-desc">View your saved jobs</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Application Trend (Chart) -->
+                <div class="card full-width">
+                    <div class="card-header">
+                        <h3><i class="fas fa-chart-line" style="color:#2563eb;"></i> Application Trend</h3>
+                        <span style="font-size:0.7rem; color:#7a8aa0;">Last 30 days</span>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="trendChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Top Skills -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-code" style="color:#2563eb;"></i> Top Skills</h3>
+                    </div>
+                    <div class="skills-list">
+                        <span class="skill">Problem Solving</span>
+                        <span class="skill">Communication</span>
+                        <span class="skill">Machine Learning</span>
+                        <span class="skill">SQL</span>
+                        <span class="skill">Data Analysis</span>
+                        <span class="skill">Python</span>
+                        <span class="skill">Cloud Computing</span>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-clock" style="color:#2563eb;"></i> Recent Activity</h3>
+                        <a href="#">View All Activity →</a>
+                    </div>
+                    <div class="activity-list">
+                        <div class="activity-item">
+                            <span class="activity-text"><i class="fas fa-paper-plane"></i> Applied to AI Engineer at Google</span>
+                            <span class="time">2h ago</span>
+                        </div>
+                        <div class="activity-item">
+                            <span class="activity-text"><i class="fas fa-file-upload"></i> Resume updated AI Resume Score: 92%</span>
+                            <span class="time">1d ago</span>
+                        </div>
+                        <div class="activity-item">
+                            <span class="activity-text"><i class="fas fa-calendar-check"></i> Interview scheduled with Microsoft</span>
+                            <span class="time">2d ago</span>
+                        </div>
+                        <div class="activity-item">
+                            <span class="activity-text"><i class="fas fa-eye"></i> Application viewed by Flutterwave</span>
+                            <span class="time">3d ago</span>
+                        </div>
+                        <div class="activity-item">
+                            <span class="activity-text"><i class="fas fa-bookmark"></i> Saved Data Analyst at Paystack</span>
+                            <span class="time">5d ago</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notifications -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-bell" style="color:#2563eb;"></i> Notifications</h3>
+                        <a href="#">View All →</a>
+                    </div>
+                    <div class="notification-list">
+                        <div class="notification-item">
+                            <i class="fas fa-info-circle"></i>
+                            <span class="notif-text">Your application to AI Engineer at Google is under review.</span>
+                            <span class="notif-time">2h ago</span>
+                        </div>
+                        <div class="notification-item">
+                            <i class="fas fa-eye"></i>
+                            <span class="notif-text">Microsoft viewed your application for Data Scientist.</span>
+                            <span class="notif-time">1d ago</span>
+                        </div>
+                        <div class="notification-item">
+                            <i class="fas fa-star"></i>
+                            <span class="notif-text">New job match: Machine Learning Engineer at Andela</span>
+                            <span class="notif-time">2d ago</span>
+                        </div>
+                        <div class="notification-item">
+                            <i class="fas fa-calendar"></i>
+                            <span class="notif-text">Interview reminder with Microsoft tomorrow at 10:00 AM.</span>
+                            <span class="notif-time">1d ago</span>
+                        </div>
+                        <div class="notification-item">
+                            <i class="fas fa-robot"></i>
+                            <span class="notif-text">Your resume optimization suggestions are ready.</span>
+                            <span class="notif-time">2d ago</span>
+                        </div>
+                    </div>
+                </div>
+            </div><!-- end dashboard-grid -->
+        </div><!-- end dashboardContent -->
+    </div><!-- end main-content -->
+
+    <script>
+        // ===== CONFIGURATION =====
+        const API_BASE_URL = 'http://localhost:5000/api';
+        
+        // ===== AUTHENTICATION CHECK =====
+        async function checkAuth() {
+            const token = getToken();
+            if (!token) {
+                redirectToLogin();
+                return false;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/me`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include'
+                });
+
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        // Try to refresh token
+                        const refreshed = await refreshToken();
+                        if (!refreshed) {
+                            redirectToLogin();
+                            return false;
+                        }
+                        // Retry with new token
+                        return checkAuth();
+                    }
+                    redirectToLogin();
+                    return false;
+                }
+
+                const data = await response.json();
+                if (data.success) {
+                    updateUserUI(data.user);
+                    return true;
+                }
+                redirectToLogin();
+                return false;
+            } catch (error) {
+                console.error('Auth check failed:', error);
+                redirectToLogin();
+                return false;
+            }
+        }
+
+        // ===== TOKEN MANAGEMENT =====
+        function getToken() {
+            // Check localStorage first
+            let token = localStorage.getItem('token');
+            
+            // If not in localStorage, try to get from cookie
+            if (!token) {
+                const cookies = document.cookie.split(';');
+                for (let cookie of cookies) {
+                    const [name, value] = cookie.trim().split('=');
+                    if (name === 'token') {
+                        token = value;
+                        // Store in localStorage for easier access
+                        localStorage.setItem('token', token);
+                        break;
+                    }
+                }
+            }
+            return token;
+        }
+
+        function saveToken(token) {
+            localStorage.setItem('token', token);
+            // Also set cookie for cross-domain support
+            document.cookie = `token=${token}; path=/; max-age=86400; SameSite=Lax`;
+        }
+
+        function clearTokens() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('refreshToken');
+            localStorage.removeItem('user');
+            document.cookie = 'token=; path=/; max-age=0';
+            document.cookie = 'refreshToken=; path=/; max-age=0';
+        }
+
+        // ===== REFRESH TOKEN =====
+        async function refreshToken() {
+            const refreshToken = localStorage.getItem('refreshToken');
+            if (!refreshToken) return false;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/refresh-token`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ refreshToken })
+                });
+
+                if (!response.ok) return false;
+
+                const data = await response.json();
+                if (data.success) {
+                    saveToken(data.token);
+                    return true;
+                }
+                return false;
+            } catch (error) {
+                console.error('Refresh token failed:', error);
+                return false;
+            }
+        }
+
+        // ===== USER UI UPDATE =====
+        function updateUserUI(user) {
+            if (!user) return;
+            
+            // Update sidebar
+            document.getElementById('userName').textContent = user.name || user.fullName || 'User';
+            document.getElementById('userRole').textContent = user.role || 'Candidate';
+            
+            // Update avatar initial
+            const name = user.name || user.fullName || 'User';
+            const initial = name.charAt(0).toUpperCase();
+            document.getElementById('userAvatar').textContent = initial;
+            
+            // Update welcome message
+            document.getElementById('welcomeMessage').textContent = `Welcome back, ${name}! 🎉`;
+            
+            // Store user in localStorage
+            localStorage.setItem('user', JSON.stringify(user));
+        }
+
+        // ===== REDIRECT =====
+        function redirectToLogin() {
+            clearTokens();
+            window.location.href = '/login.html';
+        }
+
+        // ===== LOGOUT =====
+        async function logout() {
+            try {
+                const token = getToken();
+                const refreshToken = localStorage.getItem('refreshToken');
+                
+                await fetch(`${API_BASE_URL}/auth/logout`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ refreshToken })
+                });
+            } catch (error) {
+                console.error('Logout error:', error);
+            } finally {
+                clearTokens();
+                window.location.href = '/login.html';
+            }
+        }
+
+        // ===== DASHBOARD LOADING =====
+        function showDashboard() {
+            document.getElementById('loadingSpinner').classList.remove('active');
+            document.getElementById('dashboardContent').style.display = 'block';
+        }
+
+        // ===== INITIALIZE =====
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Show loading
+            document.getElementById('loadingSpinner').classList.add('active');
+            
+            // Check authentication
+            const isAuthenticated = await checkAuth();
+            
+            if (isAuthenticated) {
+                showDashboard();
+                initChart();
+            }
+        });
+
+        // ===== CHART.JS - Application Trend =====
+        function initChart() {
+            const ctx = document.getElementById('trendChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['May 1', 'May 8', 'May 15', 'May 22', 'May 29'],
+                    datasets: [{
+                        label: 'Applications',
+                        data: [8, 12, 9, 15, 14],
+                        borderColor: '#2563eb',
+                        backgroundColor: 'rgba(37, 99, 235, 0.08)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.3,
+                        pointBackgroundColor: '#2563eb',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false,
+                        },
+                        tooltip: {
+                            backgroundColor: '#0b1a33',
+                            titleColor: '#fff',
+                            bodyColor: '#d1d9e8',
+                            cornerRadius: 10,
+                            padding: 10,
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0,0,0,0.04)',
+                            },
+                            ticks: {
+                                stepSize: 5,
+                                font: { size: 10 }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false,
+                            },
+                            ticks: {
+                                font: { size: 10 }
+                            }
+                        }
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'index',
+                    },
+                }
+            });
+        }
+
+        // ===== SIDEBAR TOGGLE (mobile) =====
+        const hamburger = document.getElementById('hamburgerBtn');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+
+        function toggleSidebar() {
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('active');
+        }
+
+        hamburger.addEventListener('click', toggleSidebar);
+        overlay.addEventListener('click', toggleSidebar);
+
+        // close sidebar on link click (mobile)
+        document.querySelectorAll('.sidebar nav a').forEach(link => {
+            link.addEventListener('click', () => {
+                if (window.innerWidth <= 768) {
+                    sidebar.classList.remove('open');
+                    overlay.classList.remove('active');
+                }
+            });
+        });
+
+        // ===== LOGOUT BUTTON =====
+        document.getElementById('logoutBtn').addEventListener('click', async (e) => {
+            e.preventDefault();
+            if (confirm('Are you sure you want to logout?')) {
+                await logout();
+            }
+        });
+    </script>
+</body>
+</html>
