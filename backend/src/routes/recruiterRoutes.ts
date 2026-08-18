@@ -1,15 +1,19 @@
 import express from 'express';
-import { getDashboard, getJobs, getApplicants } from '../controllers/recruiterController.js';
+import { createJob, getAllApplications, getApplicants, getDashboard, getJob, getJobs } from '../controllers/recruiterController.js';
 import { authenticateToken } from '../middlewares/authenticateToken.js';
 import { authorizeRole } from '../middlewares/authorizeRole.js';
+import { createJobValidation, validate } from '../middlewares/validation.js';
 
 const router = express.Router();
 
 router.use(authenticateToken);
-router.use(authorizeRole('recruiter'));
+router.use(authorizeRole('employer', 'recruiter'));
 
 router.get('/dashboard', getDashboard);
 router.get('/jobs', getJobs);
-router.get('/applicants', getApplicants);
+router.get('/applications', getAllApplications);
+router.post('/jobs', validate(createJobValidation), createJob);
+router.get('/jobs/:id', getJob);
+router.get('/jobs/:id/applicants', getApplicants);
 
 export default router;

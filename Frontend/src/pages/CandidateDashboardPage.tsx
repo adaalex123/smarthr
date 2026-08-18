@@ -1,106 +1,312 @@
-import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Fragment, useEffect, useMemo, useState, type FormEvent } from 'react'
+import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '../AuthContext'
+import { apiRequest } from '../api/client'
+import type { CandidateApplication, EmployerTrend, RankingExplanation } from '../types/jobs'
 import '../styles/candidate-dashboard.css'
 
+type NavId = 'dashboard' | 'jobs' | 'profile' | 'messages' | 'settings'
+
+type DashboardData = {
+  applications?: CandidateApplication[]
+  stats?: {
+    total: number
+    avgScore: number | null
+    companies: number
+    thisWeek: number
+  }
+  trends?: EmployerTrend[]
+}
+
+const NAV: { id: NavId; label: string }[] = [
+  { id: 'dashboard', label: 'User Dashboard' },
+  { id: 'profile', label: 'My Profile' },
+  { id: 'jobs', label: 'My Jobs' },
+  { id: 'messages', label: 'Messages' },
+  { id: 'settings', label: 'Settings' },
+]
+
+function chartGeometry(values: number[]) {
+  const max = Math.max(...values, 1)
+  const points = values.map((value, index) => {
+    const x = 24 + (index * 512) / Math.max(values.length - 1, 1)
+    const y = 210 - (value / max) * 160
+    return { x, y }
+  })
+  return {
+    line: points.map((point) => `${point.x},${point.y}`).join(' '),
+    area: points.length
+      ? `M ${points[0].x},210 L ${points.map((point) => `${point.x},${point.y}`).join(' ')} L ${points[points.length - 1].x},210 Z`
+      : '',
+  }
+}
+
+function Why({ explanation }: { explanation: RankingExplanation }) {
+  return (
+    <div className="cd-why">
+      <p>{explanation.summary}</p>
+      <p><strong>Matched:</strong> {explanation.matchedSkills.join(', ') || 'None'}</p>
+      <p><strong>Missing:</strong> {explanation.missingSkills.join(', ') || 'None'}</p>
+    </div>
+  )
+}
+
 export default function CandidateDashboardPage() {
-  const { user, logout } = useAuth()
+  const { user, logout, accessToken, completeProfile } = useAuth()
   const navigate = useNavigate()
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-  const displayName = user?.fullName || 'Ada Johnson'
+  const [activeNav, setActiveNav] = useState<NavId>('dashboard')
+  const [dashboard, setDashboard] = useState<DashboardData | null>(null)
+  const [messages, setMessages] = useState<Array<{ id: number; subject: string }>>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [openWhy, setOpenWhy] = useState<number | null>(null)
+  const [fullName, setFullName] = useState(user?.fullName ?? '')
+  const [phone, setPhone] = useState(user?.phone ?? '')
+  const [saved, setSaved] = useState('')
+  const [busy, setBusy] = useState(false)
+
+  const displayName = user?.fullName || user?.email?.split('@')[0] || 'Candidate'
+  const initials = displayName.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase()
+
+  async function loadAll() {
+    const [dash, messagesData] = await Promise.all([
+      apiRequest<DashboardData>('/candidate/dashboard'),
+      apiRequest<{ messages?: Array<{ id: number; subject: string }> }>('/candidate/messages'),
+    ])
+    setDashboard(dash)
+    setMessages(messagesData.messages ?? [])
+  }
+
+  useEffect(() => {
+    if (!accessToken) return
+    setLoading(true)
+    void loadAll()
+      .then(() => setError(''))
+      .catch((err) => setError(err instanceof Error ? err.message : 'Could not load candidate dashboard'))
+      .finally(() => setLoading(false))
+  }, [accessToken])
+
+  const stats = dashboard?.stats
+  const applications = dashboard?.applications ?? []
+  const trends = dashboard?.trends ?? []
+  const trendValues = trends.map((item) => item.value)
+  const hasTrendActivity = trendValues.some((value) => value > 0)
+  const chart = chartGeometry(trendValues)
+  const section = NAV.find((item) => item.id === activeNav)?.label ?? 'User Dashboard'
+
+  const statCards = useMemo(() => ([
+    { label: 'Applied jobs', value: String(stats?.total ?? 0), tone: 'green' as const },
+    { label: 'Companies', value: String(stats?.companies ?? 0), tone: 'pink' as const },
+    { label: 'This week', value: String(stats?.thisWeek ?? 0), tone: 'blue' as const },
+    { label: 'Avg. match', value: stats?.avgScore == null ? '—' : `${stats.avgScore}%`, tone: 'red' as const },
+  ]), [stats])
+
+  if (!accessToken) return <Navigate to="/login" replace />
 
   async function handleLogout() {
     await logout()
     navigate('/login')
   }
 
+  async function onSaveProfile(event: FormEvent) {
+    event.preventDefault()
+    setBusy(true)
+    setError('')
+    setSaved('')
+    try {
+      await completeProfile({ fullName: fullName.trim(), phone: phone.trim() || undefined })
+      setSaved('Profile saved')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not save profile')
+    } finally {
+      setBusy(false)
+    }
+  }
+
   return (
-    <div className="candidate-dashboard">
-      <div className={`sidebar-overlay${sidebarOpen ? ' active' : ''}`} onClick={() => setSidebarOpen(false)} />
-      <aside className={`sidebar${sidebarOpen ? ' open' : ''}`}>
-        <div className="logo"><i className="fas fa-brain" /> SmartHR</div>
-        <div className="user-badge">
-          <div className="avatar">{displayName.charAt(0)}</div>
-          <div className="user-info">
-            <div className="name">{displayName}</div>
-            <div className="role">{user?.role ?? 'Candidate'}</div>
-          </div>
+    <div className="cd-shell">
+      <aside className="cd-sidebar">
+        <div className="cd-brand">SmartHR</div>
+        <div className="cd-profile">
+          <div className="cd-avatar">{initials}</div>
+          <strong>{displayName}</strong>
+          <p>Job seeker</p>
         </div>
-        <div className="nav-section">Main</div>
-        <nav>
-          <a href="#" className="active"><i className="fas fa-chart-pie" /> Dashboard</a>
-          <a href="#"><i className="fas fa-search" /> Browse Jobs</a>
-          <a href="#"><i className="fas fa-file-alt" /> My Applications</a>
-          <a href="#"><i className="fas fa-robot" /> AI Resume Feedback</a>
+        <p className="cd-nav-label">Main Navigation</p>
+        <nav className="cd-nav">
+          {NAV.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              className={`cd-nav-item${activeNav === item.id ? ' active' : ''}`}
+              onClick={() => setActiveNav(item.id)}
+            >
+              {item.label}
+            </button>
+          ))}
+          <button type="button" className="cd-nav-item" onClick={() => void handleLogout()}>Log Out</button>
         </nav>
-        <div className="bottom-links">
-          <button type="button" style={{ background: 'none', border: 0, color: 'inherit', cursor: 'pointer', font: 'inherit' }} onClick={() => void handleLogout()}>
-            <i className="fas fa-sign-out-alt" /> Logout
-          </button>
-        </div>
       </aside>
 
-      <div className="main-content">
-        <div className="top-bar">
-          <div className="greeting">
-            <button type="button" className="hamburger" onClick={() => setSidebarOpen(true)}><i className="fas fa-bars" /></button>
-            <h1>Welcome back, {displayName.split(' ')[0]}!</h1>
-            <p>Good morning! Here&apos;s what&apos;s happening with your career today.</p>
+      <main className="cd-main">
+        <header className="cd-topbar">
+          <div>
+            <h1>Candidate Dashboard</h1>
+            <p>Candidate / {section}</p>
           </div>
-          <div className="actions">
-            <button type="button" className="icon-btn"><i className="fas fa-bell" /> <span>Notifications</span></button>
-            <Link to="/complete-profile" className="icon-btn" style={{ textDecoration: 'none' }}><i className="fas fa-user-circle" /> <span>Profile</span></Link>
-          </div>
-        </div>
+          <Link to="/" className="cd-topbar-btn">Browse jobs</Link>
+        </header>
 
-        <div className="profile-completion">
-          <div className="completion-text"><strong>Your profile is 85% complete</strong><br />Complete your profile to get up to 3x more interview opportunities.</div>
-          <div className="completion-bar"><div className="fill" style={{ width: '85%' }} /></div>
-          <Link to="/complete-profile" className="completion-btn">Complete Profile →</Link>
-        </div>
+        {error && <div className="cd-banner">{error}</div>}
+        {saved && <div className="cd-success">{saved}</div>}
+        {loading && <p className="cd-muted">Loading...</p>}
 
-        <div className="dashboard-grid">
-          <div className="card">
-            <div className="card-header"><h3><i className="fas fa-robot" style={{ color: '#2563eb' }} /> AI Resume Score</h3></div>
-            <div className="resume-score-grid">
-              {[['92%', 'Overall'], ['95%', 'Skills'], ['98%', 'Experience']].map(([score, label]) => (
-                <div key={label} className="score-item"><div className="score">{score}</div><div className="label">{label}</div><span className="badge">Excellent</span></div>
+        {activeNav === 'dashboard' && (
+          <>
+            <section className="cd-stat-row">
+              {statCards.map((card) => (
+                <article key={card.label} className="cd-stat-card">
+                  <div className={`cd-stat-icon cd-stat-icon--${card.tone}`} />
+                  <div>
+                    <span className="cd-stat-num">{card.value}</span>
+                    <span className="cd-stat-label">{card.label}</span>
+                  </div>
+                </article>
               ))}
-            </div>
-          </div>
-          <div className="card">
-            <div className="card-header"><h3><i className="fas fa-briefcase" style={{ color: '#2563eb' }} /> Application Overview</h3></div>
-            <div className="app-stats">
-              {[['14', 'Applied'], ['5', 'Under Review'], ['2', 'Interview'], ['1', 'Offer']].map(([n, label]) => (
-                <div key={label} className="app-stat"><div className="number">{n}</div><div className="label">{label}</div></div>
-              ))}
-            </div>
-          </div>
-          <div className="card">
-            <div className="card-header"><h3><i className="fas fa-star" style={{ color: '#f59e0b' }} /> Recommended Jobs</h3></div>
-            <div className="job-list">
-              {[
-                ['AI Engineer', 'Google · Lagos', '93% match'],
-                ['Data Scientist', 'Microsoft · Abuja', '93% match'],
-                ['ML Engineer', 'Flutterwave · Lagos', '93% match'],
-              ].map(([title, company, match]) => (
-                <div key={title} className="job-item">
-                  <div className="job-info"><div className="title">{title}</div><div className="company">{company}</div></div>
-                  <div className="job-meta"><div className="match">{match}</div></div>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="card">
-            <div className="card-header"><h3><i className="fas fa-bolt" style={{ color: '#f59e0b' }} /> Quick Actions</h3></div>
-            <div className="quick-actions">
-              {['Upload Resume', 'Browse Jobs', 'AI Feedback', 'Saved Jobs'].map((label) => (
-                <div key={label} className="quick-action"><i className="fas fa-arrow-right" /><div className="action-label">{label}</div></div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
+            </section>
+            <section className="cd-content">
+              <article className="cd-panel">
+                <h2>Recently Applied Jobs</h2>
+                {applications.length === 0 ? (
+                  <div className="cd-empty">
+                    <p>No applications yet</p>
+                    <Link to="/" className="cd-cta-btn">Browse open roles</Link>
+                  </div>
+                ) : (
+                  <div className="cd-job-list">
+                    {applications.slice(0, 6).map((application) => (
+                      <div key={application.id} className="cd-job-row">
+                        <div className="cd-job-mark">{application.company[0]?.toUpperCase()}</div>
+                        <div>
+                          <strong>{application.jobTitle}</strong>
+                          <p>{application.company}{application.location ? ` · ${application.location}` : ''}</p>
+                        </div>
+                        <span className="cd-score-pill">{application.matchScore}%</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </article>
+              <article className="cd-panel">
+                <h2>Applications this week</h2>
+                {!hasTrendActivity ? (
+                  <div className="cd-empty">
+                    <p>No application activity yet</p>
+                    <span>A weekly chart appears after you apply.</span>
+                  </div>
+                ) : (
+                  <div className="cd-chart-wrap">
+                    <svg viewBox="0 0 560 240" className="cd-chart" role="img" aria-label="Weekly applications">
+                      <path className="cd-chart-area" d={chart.area} />
+                      <polyline className="cd-chart-line" points={chart.line} />
+                    </svg>
+                    <div className="cd-chart-legend">
+                      {trends.map((point) => (
+                        <span key={point.label}>{point.label.slice(5)} · {point.value}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </article>
+            </section>
+          </>
+        )}
+
+        {activeNav === 'jobs' && (
+          <section className="cd-panel">
+            <h2>My applications</h2>
+            {applications.length === 0 ? (
+              <div className="cd-empty">
+                <p>No applications yet</p>
+                <Link to="/" className="cd-cta-btn">Find a role to apply</Link>
+              </div>
+            ) : (
+              <div className="cd-table-wrap">
+                <table className="cd-table">
+                  <thead>
+                    <tr>
+                      <th>Job</th>
+                      <th>Company</th>
+                      <th>Match</th>
+                      <th>Applied</th>
+                      <th>Why</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {applications.map((application) => (
+                      <Fragment key={application.id}>
+                        <tr>
+                          <td>
+                            <strong>{application.jobTitle}</strong>
+                            <div className="cd-muted">{application.location || 'No location'}</div>
+                          </td>
+                          <td>{application.company}</td>
+                          <td><span className="cd-score-pill">{application.matchScore}%</span></td>
+                          <td className="cd-muted">{new Date(application.createdAt).toLocaleDateString()}</td>
+                          <td>
+                            <button type="button" className="cd-text-btn" onClick={() => setOpenWhy(openWhy === application.id ? null : application.id)}>
+                              {openWhy === application.id ? 'Hide' : 'Show why'}
+                            </button>
+                          </td>
+                        </tr>
+                        {openWhy === application.id && (
+                          <tr>
+                            <td colSpan={5}><Why explanation={application.explanation} /></td>
+                          </tr>
+                        )}
+                      </Fragment>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+        )}
+
+        {(activeNav === 'profile' || activeNav === 'settings') && (
+          <section className="cd-panel cd-panel--narrow">
+            <h2>{activeNav === 'profile' ? 'My profile' : 'Account settings'}</h2>
+            <form className="cd-form" onSubmit={(event) => void onSaveProfile(event)}>
+              <label htmlFor="candidate-name">Full name</label>
+              <input id="candidate-name" value={fullName} onChange={(e) => setFullName(e.target.value)} />
+              <label htmlFor="candidate-phone">Phone</label>
+              <input id="candidate-phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
+              <p className="cd-muted">{user?.email}</p>
+              <button className="cd-topbar-btn" type="submit" disabled={busy}>{busy ? 'Saving...' : 'Save profile'}</button>
+            </form>
+          </section>
+        )}
+
+        {activeNav === 'messages' && (
+          <section className="cd-panel">
+            <h2>Messages</h2>
+            {messages.length === 0 ? (
+              <div className="cd-empty">
+                <p>Inbox is empty</p>
+                <span>There is no messaging thread data yet for this account.</span>
+              </div>
+            ) : (
+              <div className="cd-job-list">
+                {messages.map((message) => (
+                  <div key={message.id} className="cd-job-row">
+                    <strong>{message.subject}</strong>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+      </main>
     </div>
   )
 }

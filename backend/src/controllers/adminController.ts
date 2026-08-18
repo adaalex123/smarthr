@@ -7,10 +7,10 @@ const STATUSES: UserStatus[] = ['active', 'inactive', 'suspended'];
 export const getDashboard = asyncHandler(async (req, res) => {
   if (!req.user) throw new AppError('Authentication required', 401);
 
-  const [totalUsers, totalEmployers, totalRecruiters, totalAdmins] = await Promise.all([
+  const [totalUsers, totalRecruiters, totalCandidates, totalAdmins] = await Promise.all([
     userModel.count(),
-    userModel.count({ role: 'employer' }),
-    userModel.count({ role: 'recruiter' }),
+    userModel.count({ role: { in: ['employer', 'recruiter'] } }),
+    userModel.count({ role: 'candidate' }),
     userModel.count({ role: 'admin' }),
   ]);
 
@@ -23,8 +23,8 @@ export const getDashboard = asyncHandler(async (req, res) => {
     },
     data: {
       totalUsers,
-      totalEmployers,
       totalRecruiters,
+      totalCandidates,
       totalAdmins,
     },
   });

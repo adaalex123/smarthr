@@ -24,14 +24,35 @@ async function main() {
     },
   });
 
-  const employer = await prisma.user.upsert({
+  const recruiter = await prisma.user.upsert({
     where: { email: 'employer@smarthr.local' },
     update: {},
     create: {
-      fullName: 'Acme Employer',
+      fullName: 'Acme Recruiter',
       email: 'employer@smarthr.local',
       password: passwordHash,
-      role: 'employer',
+      role: 'recruiter',
+      status: 'active',
+      provider: 'local',
+      recruiterProfile: {
+        create: {
+          companyName: 'Acme',
+          industry: 'Technology',
+          jobTitle: 'Talent Partner',
+          country: 'United States',
+        },
+      },
+    },
+  });
+
+  const candidate = await prisma.user.upsert({
+    where: { email: 'candidate@smarthr.local' },
+    update: {},
+    create: {
+      fullName: 'Ada Candidate',
+      email: 'candidate@smarthr.local',
+      password: passwordHash,
+      role: 'candidate',
       status: 'active',
       provider: 'local',
     },
@@ -46,7 +67,7 @@ async function main() {
     },
   });
 
-  console.log(`Seeded users: admin=${admin.id}, employer=${employer.id}`);
+  console.log(`Seeded users: admin=${admin.id}, recruiter=${recruiter.id}, candidate=${candidate.id}`);
 }
 
 main()

@@ -10,5 +10,6 @@
     "resolveJsonModule": true,
     "types": ["node"]
   },
-  "include": ["src", "generated/prisma"]
+  "include": ["src", "generated/prisma"],
+  "exclude": ["src/**/*.test.ts"]
 }

@@ -9,6 +9,7 @@
     "start": "dotenv -e .env.production -- tsx src/server.ts --env=production",
     "start:staging": "dotenv -e .env.staging -- tsx src/server.ts --env=staging",
     "typecheck": "tsc --noEmit",
+    "test": "tsx --test src/services/rankingService.test.ts src/services/jobService.trends.test.ts",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "dotenv -e .env.development -- prisma migrate dev",
     "prisma:push": "dotenv -e .env.development -- prisma db push",

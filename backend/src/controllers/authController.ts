@@ -65,8 +65,19 @@ export const getCurrentUser = asyncHandler(async (req, res) => {
 
 export const updateProfile = asyncHandler(async (req, res) => {
   if (!req.user) throw new AppError('Authentication required', 401);
-  const { fullName, phone } = req.body as { fullName?: string; phone?: string };
-  const user = await AuthService.updateProfile(req.user.id, { fullName, phone });
+  const { fullName, phone, recruiterProfile } = req.body as {
+    fullName?: string;
+    phone?: string;
+    recruiterProfile?: {
+      companyName: string;
+      companyWebsite?: string;
+      industry: string;
+      jobTitle: string;
+      country: string;
+      linkedIn?: string;
+    };
+  };
+  const user = await AuthService.updateProfile(req.user.id, { fullName, phone, recruiterProfile });
   res.json({
     success: true,
     user,

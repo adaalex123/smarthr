@@ -11,6 +11,7 @@ enum Role {
   admin
   employer
   recruiter
+  candidate
 }
 
 enum UserStatus {
@@ -35,9 +36,65 @@ model User {
   updatedAt        DateTime       @updatedAt
   refreshTokens    RefreshToken[]
   auditLogs        AuditLog[]
+  recruiterProfile RecruiterProfile?
+  jobs             Job[]
 
   @@unique([provider, providerId])
   @@map("users")
+}
+
+enum JobStatus {
+  open
+  closed
+}
+
+model Job {
+  id             Int           @id @default(autoincrement())
+  recruiterId    Int
+  recruiter      User          @relation(fields: [recruiterId], references: [id], onDelete: Cascade)
+  title          String
+  description    String
+  requirements   String
+  location       String?
+  status         JobStatus     @default(open)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  applications   Application[]
+
+  @@map("jobs")
+}
+
+model Application {
+  id            Int      @id @default(autoincrement())
+  jobId         Int
+  job           Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  fullName      String
+  email         String
+  resumeText    String
+  matchScore    Float
+  semanticScore Float
+  skillScore    Float
+  explanation   Json
+  createdAt     DateTime @default(now())
+
+  @@unique([jobId, email])
+  @@map("applications")
+}
+
+model RecruiterProfile {
+  id             Int      @id @default(autoincrement())
+  userId         Int      @unique
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyName    String
+  companyWebsite String?
+  industry       String
+  jobTitle       String
+  country        String
+  linkedIn       String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("recruiter_profiles")
 }
 
 model RefreshToken {

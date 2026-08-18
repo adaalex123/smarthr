@@ -1,16 +1,33 @@
 import { createContext, useContext, useMemo, useState, type ReactNode } from 'react'
 import { apiRequest } from './api/client'
 import { signInWithGoogle, signOutGoogle } from './lib/firebase'
+import type { RecruiterProfileInput } from './constants/recruiterSignup'
 import type { AuthResponse, AuthUser, UserRole } from './types/auth'
+
+type SignupPayload = {
+  email: string
+  password: string
+  role: UserRole
+  fullName?: string
+  phone?: string
+  country?: string
+  recruiterProfile?: RecruiterProfileInput
+}
+
+type CompleteProfilePayload = {
+  fullName: string
+  phone?: string
+  recruiterProfile?: RecruiterProfileInput
+}
 
 type AuthContextValue = {
   accessToken: string | null
   user: AuthUser | null
   role: UserRole | null
   login: (email: string, password: string) => Promise<AuthUser>
-  signup: (payload: { email: string; password: string; role: UserRole }) => Promise<AuthUser>
+  signup: (payload: SignupPayload) => Promise<AuthUser>
   googleAuth: (role?: UserRole) => Promise<AuthUser>
-  completeProfile: (payload: { fullName: string; phone?: string }) => Promise<AuthUser>
+  completeProfile: (payload: CompleteProfilePayload) => Promise<AuthUser>
   logout: () => Promise<void>
 }
 
@@ -92,7 +109,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } catch {
         // still clear local session
       }
-      await signOutGoogle()
+      try {
+        await signOutGoogle()
+      } catch {
+        // local logout should still succeed even if Google session cleanup fails
+      }
       localStorage.removeItem('accessToken')
       localStorage.removeItem('refreshToken')
       localStorage.removeItem('user')

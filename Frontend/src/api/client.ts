@@ -45,8 +45,23 @@ export async function apiRequest<T = AuthResponse>(
 
   const data = (await res.json().catch(() => ({}))) as T & AuthResponse
   if (!res.ok) {
-    const message = data.message || 'Request failed'
-    throw Object.assign(new Error(message), { status: res.status, data })
+    throw Object.assign(new Error(apiErrorMessage(data)), { status: res.status, data })
   }
   return data
+}
+
+export function apiErrorMessage(data: Pick<AuthResponse, 'message' | 'errors'> | undefined, fallback = 'Request failed') {
+  const details = data?.errors?.map((item) => item.message).filter(Boolean) ?? []
+  if (details.length) return details.join(' · ')
+  return data?.message || fallback
+}
+
+export function apiErrorFields(error: unknown): Record<string, string> {
+  const data = error instanceof Error ? (error as Error & { data?: AuthResponse }).data : undefined
+  const fields: Record<string, string> = {}
+  for (const item of data?.errors ?? []) {
+    const key = item.field.split('.').pop() || item.field
+    fields[key] = item.message
+  }
+  return fields
 }

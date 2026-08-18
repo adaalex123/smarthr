@@ -1,22 +1,28 @@
 :root {
-  --navy-950: #070f24;
-  --navy-900: #0b1a3c;
+  --purple-dark: #48006e;
+  --purple-main: #5b068a;
+  --purple-light: #7e00b4;
+  --purple-soft: #f4e8ff;
+  --purple-glow: rgba(72, 0, 110, 0.12);
   --gold-500: #f2a900;
-  --gold-600: #d99400;
-  --blue-500: #3b6ff0;
-  --slate-900: #101828;
-  --slate-600: #4b5568;
-  --slate-500: #697082;
+  --navy-950: #0b1120;
+  --slate-900: #1a1a1a;
+  --slate-700: #4a4a4a;
+  --slate-500: #666666;
+  --slate-200: #e5e7eb;
+  --slate-100: #f8f9fa;
+  --red-accent: #e53935;
+  --green-accent: #2e7d32;
   --paper: #ffffff;
-  --bg-soft: #f4f7fc;
 }
 
 * { box-sizing: border-box; }
 html, body, #root { margin: 0; min-height: 100%; }
 body {
-  font-family: Inter, system-ui, sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
   color: var(--slate-900);
-  background: var(--bg-soft);
+  background: #ffffff;
+  -webkit-font-smoothing: antialiased;
 }
 
 .auth-shell {

@@ -7,6 +7,8 @@ import CompleteProfilePage from './pages/CompleteProfilePage'
 import LandingPage from './pages/LandingPage'
 import LoginPage from './pages/LoginPage'
 import SignupPage from './pages/SignupPage'
+import AllApplicationsPage from './pages/AllApplicationsPage'
+import ApplyJobPage from './pages/ApplyJobPage'
 import WorkspacePage from './pages/WorkspacePage'
 
 export default function App() {
@@ -21,7 +23,7 @@ export default function App() {
           <Route
             path="/employer"
             element={(
-              <ProtectedRoute role="employer">
+              <ProtectedRoute roles={['employer', 'recruiter']}>
                 <WorkspacePage />
               </ProtectedRoute>
             )}
@@ -29,11 +31,20 @@ export default function App() {
           <Route
             path="/recruiter"
             element={(
-              <ProtectedRoute role="recruiter">
+              <ProtectedRoute roles={['employer', 'recruiter']}>
                 <WorkspacePage />
               </ProtectedRoute>
             )}
           />
+          <Route
+            path="/recruiter/applications"
+            element={(
+              <ProtectedRoute roles={['employer', 'recruiter']}>
+                <AllApplicationsPage />
+              </ProtectedRoute>
+            )}
+          />
+          <Route path="/jobs/:id/apply" element={<ApplyJobPage />} />
           <Route
             path="/admin"
             element={(
@@ -42,7 +53,14 @@ export default function App() {
               </ProtectedRoute>
             )}
           />
-          <Route path="/candidate" element={<CandidateDashboardPage />} />
+          <Route
+            path="/candidate"
+            element={(
+              <ProtectedRoute role="candidate">
+                <CandidateDashboardPage />
+              </ProtectedRoute>
+            )}
+          />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>

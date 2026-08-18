@@ -1,16 +1,36 @@
-import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useMemo, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../AuthContext'
 import { apiRequest } from '../api/client'
 import '../styles/admin-dashboard.css'
 
-type AdminUser = { username: string; role: string }
+type AdminUser = {
+  id: number
+  fullName: string
+  email: string
+  role: 'admin' | 'employer' | 'recruiter' | 'candidate'
+  status: 'active' | 'inactive' | 'suspended'
+  createdAt: string
+}
+
+type DashboardStats = {
+  totalUsers: number
+  totalRecruiters: number
+  totalCandidates: number
+  totalAdmins: number
+}
+
+const STATUSES: AdminUser['status'][] = ['active', 'inactive', 'suspended']
 
 export default function AdminDashboardPage() {
   const { user, logout, accessToken } = useAuth()
   const navigate = useNavigate()
   const [users, setUsers] = useState<AdminUser[]>([])
+  const [stats, setStats] = useState<DashboardStats | null>(null)
   const [loading, setLoading] = useState(true)
+  const [updatingUserId, setUpdatingUserId] = useState<number | null>(null)
+  const [error, setError] = useState('')
+  const [activeNav, setActiveNav] = useState('dashboard')
 
   useEffect(() => {
     if (!accessToken) {
@@ -22,64 +42,176 @@ export default function AdminDashboardPage() {
 
   async function loadData() {
     setLoading(true)
+    setError('')
     try {
-      const data = await apiRequest('/admin/users')
-      setUsers(data.users ?? [])
-    } catch {
-      setUsers([])
+      const [dashboard, usersData] = await Promise.all([
+        apiRequest<{ data?: DashboardStats }>('/admin/dashboard'),
+        apiRequest<{ users?: AdminUser[] }>('/admin/users'),
+      ])
+      setStats(dashboard.data ?? null)
+      setUsers(usersData.users ?? [])
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not load admin dashboard')
     } finally {
       setLoading(false)
     }
   }
+
+  async function updateStatus(target: AdminUser, status: AdminUser['status']) {
+    if (target.status === status) return
+    setUpdatingUserId(target.id)
+    setError('')
+    try {
+      await apiRequest(`/admin/users/${target.id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ action: 'updateStatus', data: { status } }),
+      })
+      setUsers((current) => current.map((u) => (u.id === target.id ? { ...u, status } : u)))
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not update user status')
+    } finally {
+      setUpdatingUserId(null)
+    }
+  }
+
+  const recentUsers = useMemo(() => users.slice(0, 10), [users])
 
   async function handleLogout() {
     await logout()
     navigate('/login')
   }
 
+  const displayName = user?.fullName || user?.email?.split('@')[0] || 'Admin'
+  const initials = displayName.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase()
+
+  const statCards = [
+    { label: 'Total Users', value: stats?.totalUsers ?? users.length, icon: '👥', accent: 'purple' },
+    { label: 'Recruiters', value: stats?.totalRecruiters ?? users.filter((u) => u.role === 'employer' || u.role === 'recruiter').length, icon: '💼', accent: 'blue' },
+    { label: 'Candidates', value: stats?.totalCandidates ?? users.filter((u) => u.role === 'candidate').length, icon: '👤', accent: 'pink' },
+    { label: 'Admins', value: stats?.totalAdmins ?? users.filter((u) => u.role === 'admin').length, icon: '🛡️', accent: 'green' },
+  ]
+
   return (
-    <div className="admin-dashboard">
-      <div className="navbar">
-        <h2>AI Resume Screener - Admin</h2>
-        <button type="button" onClick={() => void handleLogout()}>Logout</button>
-      </div>
-
-      <div className="container">
-        <div className="stats">
-          <div className="card"><h3>Total Users</h3><p>{users.length || 3}</p></div>
-          <div className="card"><h3>Total Jobs</h3><p>12</p></div>
-          <div className="card"><h3>Resumes Screened</h3><p>145</p></div>
-          <div className="card"><h3>API Calls</h3><p>1024</p></div>
+    <div className="ad-shell">
+      {/* Sidebar */}
+      <aside className="ad-sidebar">
+        <div className="ad-sidebar-brand">
+          <Link to="/" className="ad-logo-block">smart hr<br />recruitment</Link>
         </div>
 
-        <div className="card">
-          <h2>Manage Users</h2>
-          {loading ? <p>Loading users...</p> : (
-            <table>
-              <thead>
-                <tr><th>Username</th><th>Role</th><th>Action</th></tr>
-              </thead>
-              <tbody>
-                {users.length ? users.map((u) => (
-                  <tr key={u.username}>
-                    <td>{u.username}</td>
-                    <td>{u.role}</td>
-                    <td><button type="button" className="btn-danger">Delete</button></td>
+        <div className="ad-profile-mini">
+          <div className="ad-avatar">{initials}</div>
+          <div>
+            <strong>{displayName}</strong>
+            <p>Administrator</p>
+          </div>
+        </div>
+
+        <nav className="ad-nav">
+          <p className="ad-nav-label">Main Navigation</p>
+          {[
+            { id: 'dashboard', icon: '⊞', label: 'Dashboard' },
+            { id: 'users', icon: '👥', label: 'Users' },
+            { id: 'settings', icon: '⚙️', label: 'Settings' },
+          ].map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              className={`ad-nav-item${activeNav === item.id ? ' active' : ''}`}
+              onClick={() => setActiveNav(item.id)}
+            >
+              <span className="ad-nav-icon">{item.icon}</span>
+              {item.label}
+            </button>
+          ))}
+
+          <button type="button" className="ad-nav-item ad-nav-logout" onClick={() => void handleLogout()}>
+            <span className="ad-nav-icon">⏻</span> Log Out
+          </button>
+        </nav>
+      </aside>
+
+      {/* Main */}
+      <main className="ad-main">
+        <header className="ad-topbar">
+          <div>
+            <h1>Employer Dashboard</h1>
+            <nav className="ad-breadcrumb">
+              <span>Admin</span>
+              <span className="ad-bc-sep">›</span>
+              <span>Dashboard</span>
+              <span className="ad-bc-sep">›</span>
+              <span className="ad-bc-active">Platform Statistics</span>
+            </nav>
+          </div>
+          <button type="button" className="ad-topbar-btn" onClick={() => void loadData()}>↻ Refresh</button>
+        </header>
+
+        {error && <div className="ad-banner">{error}</div>}
+
+        {/* Stat cards */}
+        <div className="ad-stat-row">
+          {statCards.map((card) => (
+            <article key={card.label} className="ad-stat-card">
+              <div className={`ad-stat-icon ad-stat-icon--${card.accent}`}>{card.icon}</div>
+              <div>
+                <span className="ad-stat-num">{card.value}</span>
+                <span className="ad-stat-label">{card.label}</span>
+              </div>
+            </article>
+          ))}
+        </div>
+
+        {/* Users table */}
+        <section className="ad-card">
+          <div className="ad-card-head">
+            <h2>Recent Users</h2>
+            <span className="ad-muted">{users.length} total</span>
+          </div>
+
+          {loading ? (
+            <p className="ad-muted">Loading users...</p>
+          ) : (
+            <div className="ad-table-wrap">
+              <table className="ad-table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Created</th>
                   </tr>
-                )) : (
-                  <tr><td colSpan={3}>No users loaded — connect admin API or use demo data.</td></tr>
-                )}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {recentUsers.map((item) => (
+                    <tr key={item.id}>
+                      <td><strong>{item.fullName || '—'}</strong></td>
+                      <td className="ad-muted-cell">{item.email}</td>
+                      <td><span className="ad-pill">{item.role}</span></td>
+                      <td>
+                        <select
+                          value={item.status}
+                          disabled={updatingUserId === item.id}
+                          onChange={(e) => void updateStatus(item, e.target.value as AdminUser['status'])}
+                          className={`ad-status-select ad-status--${item.status}`}
+                        >
+                          {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
+                        </select>
+                      </td>
+                      <td className="ad-muted-cell">{new Date(item.createdAt).toLocaleDateString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
-          <button type="button" className="btn-primary" style={{ marginTop: 16 }}>+ Add User</button>
-        </div>
+        </section>
 
-        <div className="card" style={{ marginTop: 20 }}>
-          <h2>API Access</h2>
-          <p>Signed in as {user?.email ?? 'admin'}. Your API Key: <b>sk-demo-12345-ADMIN</b></p>
-        </div>
-      </div>
+        <footer className="ad-footnote">
+          Signed in as <strong>{user?.email}</strong>
+        </footer>
+      </main>
     </div>
   )
 }

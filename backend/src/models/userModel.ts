@@ -11,6 +11,16 @@ export const publicUserSelect = {
   provider: true,
   createdAt: true,
   updatedAt: true,
+  recruiterProfile: {
+    select: {
+      companyName: true,
+      companyWebsite: true,
+      industry: true,
+      jobTitle: true,
+      country: true,
+      linkedIn: true,
+    },
+  },
 } satisfies Prisma.UserSelect;
 
 export type PublicUser = Prisma.UserGetPayload<{ select: typeof publicUserSelect }>;

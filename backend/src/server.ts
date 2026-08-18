@@ -8,8 +8,10 @@ import { config } from './config/index.js';
 import { errorHandler } from './utils/errorHandler.js';
 import authRoutes from './routes/authRoutes.js';
 import employerRoutes from './routes/employerRoutes.js';
+import candidateRoutes from './routes/candidateRoutes.js';
 import recruiterRoutes from './routes/recruiterRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
+import jobRoutes from './routes/jobRoutes.js';
 
 const app = express();
 const apiBase = `/api/${config.apiVersion}`;
@@ -65,8 +67,10 @@ app.get('/health', (_req, res) => {
 
 app.use(`${apiBase}/auth`, authRoutes);
 app.use(`${apiBase}/employer`, employerRoutes);
+app.use(`${apiBase}/candidate`, candidateRoutes);
 app.use(`${apiBase}/recruiter`, recruiterRoutes);
 app.use(`${apiBase}/admin`, adminRoutes);
+app.use(`${apiBase}/jobs`, jobRoutes);
 
 app.use((_req, res) => {
   res.status(404).json({

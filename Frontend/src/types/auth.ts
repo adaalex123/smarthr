@@ -1,4 +1,14 @@
-export type UserRole = 'admin' | 'employer' | 'recruiter'
+export type UserRole = 'admin' | 'employer' | 'recruiter' | 'candidate'
+export type HiringRole = 'employer' | 'recruiter'
+
+export type RecruiterProfile = {
+  companyName: string
+  companyWebsite?: string | null
+  industry: string
+  jobTitle: string
+  country: string
+  linkedIn?: string | null
+}
 
 export type AuthUser = {
   id: number
@@ -9,6 +19,7 @@ export type AuthUser = {
   role: UserRole
   status?: string
   provider?: string
+  recruiterProfile?: RecruiterProfile | null
 }
 
 export type AuthResponse = {
@@ -20,12 +31,20 @@ export type AuthResponse = {
   errors?: { field: string; message: string }[]
 }
 
+export function isHiringRole(role: string): role is HiringRole {
+  return role === 'employer' || role === 'recruiter'
+}
+
 export function homePath(role: UserRole) {
   if (role === 'admin') return '/admin'
-  if (role === 'recruiter') return '/recruiter'
+  if (role === 'candidate') return '/candidate'
   return '/employer'
 }
 
-export function needsProfile(user: AuthUser | null) {
-  return !user?.fullName?.trim()
+export function needsProfile(user: Pick<AuthUser, 'fullName' | 'role' | 'recruiterProfile'> | null) {
+  if (!user) return false
+  if (isHiringRole(user.role)) {
+    return !user.fullName?.trim() || !user.recruiterProfile
+  }
+  return false
 }
