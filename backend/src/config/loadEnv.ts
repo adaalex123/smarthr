@@ -4,6 +4,7 @@ import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
+let loadedEnv: { envName: string; envPath: string; rootDir: string } | null = null;
 
 function resolveEnvName(): string {
   const fromArg = process.argv.find((arg) => arg.startsWith('--env='));
@@ -12,16 +13,23 @@ function resolveEnvName(): string {
 }
 
 export function loadEnv() {
+  if (loadedEnv) return loadedEnv;
+
   const envName = resolveEnvName();
   process.env.NODE_ENV = envName;
 
   const envPath = path.join(rootDir, `.env.${envName}`);
-  if (!fs.existsSync(envPath)) {
-    throw new Error(`Missing environment file: ${envPath}`);
+  if (fs.existsSync(envPath)) {
+    dotenv.config({ path: envPath });
+  } else {
+    const fallbackEnvPath = path.join(rootDir, '.env');
+    if (fs.existsSync(fallbackEnvPath)) {
+      dotenv.config({ path: fallbackEnvPath });
+    }
   }
 
-  dotenv.config({ path: envPath });
-  return { envName, envPath, rootDir };
+  loadedEnv = { envName, envPath, rootDir };
+  return loadedEnv;
 }
 
 export { rootDir };

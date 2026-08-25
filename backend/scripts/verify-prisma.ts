@@ -1,9 +1,16 @@
-import 'dotenv/config';
 import pg from 'pg';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../generated/prisma/client.js';
+import { loadEnv } from '../src/config/loadEnv.js';
 
-const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
+loadEnv();
+
+const connectionString = process.env.DATABASE_URL;
+if (!connectionString) {
+  throw new Error('Missing required env var DATABASE_URL');
+}
+
+const pool = new pg.Pool({ connectionString });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
