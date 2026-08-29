@@ -29,7 +29,12 @@ export async function apiRequest<T = AuthResponse>(
 ): Promise<T> {
   const accessToken = localStorage.getItem('accessToken')
   const headers = new Headers(options.headers)
-  headers.set('Content-Type', 'application/json')
+  const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData
+  if (isFormData) {
+    headers.delete('Content-Type')
+  } else {
+    headers.set('Content-Type', 'application/json')
+  }
   if (accessToken) headers.set('Authorization', `Bearer ${accessToken}`)
 
   const res = await fetch(`${API_BASE}${path}`, {

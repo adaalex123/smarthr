@@ -14,9 +14,9 @@ import { createJobValidation, validate } from '../middlewares/validation.js';
 
 const router = express.Router();
 
-// All employer routes need auth + employer role
+// The frontend uses /employer for both historical employer users and current recruiter users.
 router.use(authenticateToken);
-router.use(authorizeRole('employer'));
+router.use(authorizeRole('employer', 'recruiter'));
 
 router.get('/dashboard', getDashboard);
 router.get('/jobs', getJobs);

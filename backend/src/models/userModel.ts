@@ -23,11 +23,22 @@ export const publicUserSelect = {
   },
 } satisfies Prisma.UserSelect;
 
+export const authUserSelect = {
+  ...publicUserSelect,
+  password: true,
+  providerId: true,
+} satisfies Prisma.UserSelect;
+
 export type PublicUser = Prisma.UserGetPayload<{ select: typeof publicUserSelect }>;
+export type AuthUserRecord = Prisma.UserGetPayload<{ select: typeof authUserSelect }>;
 
 export const userModel = {
   findByEmail(email: string) {
-    return prisma.user.findUnique({ where: { email } });
+    return prisma.user.findUnique({ where: { email }, select: publicUserSelect });
+  },
+
+  findAuthByEmail(email: string) {
+    return prisma.user.findUnique({ where: { email }, select: authUserSelect });
   },
 
   findById(id: number, select: Prisma.UserSelect = publicUserSelect) {
@@ -35,7 +46,11 @@ export const userModel = {
   },
 
   findByProvider(provider: string, providerId: string) {
-    return prisma.user.findFirst({ where: { provider, providerId } });
+    return prisma.user.findFirst({ where: { provider, providerId }, select: publicUserSelect });
+  },
+
+  findAuthByProvider(provider: string, providerId: string) {
+    return prisma.user.findFirst({ where: { provider, providerId }, select: authUserSelect });
   },
 
   create(data: Prisma.UserCreateInput) {

@@ -2,11 +2,11 @@ import bcrypt from 'bcrypt';
 import jwt, { SignOptions } from 'jsonwebtoken';
 import crypto from 'crypto';
 import { Request } from 'express';
-import { Role, User } from '../../generated/prisma/client.js';
+import { Role } from '../../generated/prisma/client.js';
 import prisma from '../config/database.js';
 import { config } from '../config/index.js';
 import { providerFromFirebase, verifyFirebaseToken } from '../config/firebase.js';
-import { PublicUser, userModel } from '../models/userModel.js';
+import { PublicUser, publicUserSelect, userModel } from '../models/userModel.js';
 import { RecruiterProfileInput, recruiterProfileModel } from '../models/recruiterProfileModel.js';
 import { canonicalizeRole, isHiringRole } from '../types/auth.js';
 import { AppError } from '../utils/errorHandler.js';
@@ -14,7 +14,7 @@ import { AppError } from '../utils/errorHandler.js';
 const PUBLIC_ROLES = ['admin', 'employer', 'recruiter', 'candidate'] as const;
 type PublicRole = (typeof PUBLIC_ROLES)[number];
 
-type SessionUser = Pick<User, 'id' | 'fullName' | 'email' | 'role' | 'status' | 'provider'>;
+type SessionUser = PublicUser;
 
 type RegisterInput = {
   email: string;
@@ -56,9 +56,11 @@ function toAuthUser(user: SessionUser) {
     name: user.fullName,
     fullName: user.fullName,
     email: user.email,
+    phone: user.phone,
     role: user.role,
     status: user.status,
     provider: user.provider,
+    recruiterProfile: user.recruiterProfile,
   };
 }
 
@@ -161,7 +163,7 @@ export class AuthService {
   }
 
   static async login(email: string, password: string, req: Request) {
-    const user = await userModel.findByEmail(email);
+    const user = await userModel.findAuthByEmail(email);
     if (!user) {
       throw new AppError('Invalid credentials', 401);
     }
@@ -192,9 +194,10 @@ export class AuthService {
       throw new AppError('OAuth account has no email', 400);
     }
 
-    let user: User | PublicUser | null = await userModel.findByProvider(provider, providerId);
+    let user: PublicUser | Awaited<ReturnType<typeof userModel.findAuthByProvider>> =
+      await userModel.findAuthByProvider(provider, providerId);
     if (!user) {
-      user = await userModel.findByEmail(email);
+      user = await userModel.findAuthByEmail(email);
     }
 
     if (!user) {
@@ -224,7 +227,7 @@ export class AuthService {
 
     const stored = await prisma.refreshToken.findUnique({
       where: { token: oldToken },
-      include: { user: true },
+      include: { user: { select: publicUserSelect } },
     });
 
     if (!stored || stored.expiresAt < new Date()) {
@@ -303,7 +306,7 @@ export class AuthService {
   }
 
   static async forgotPassword(email: string) {
-    const user = await userModel.findByEmail(email);
+    const user = await userModel.findAuthByEmail(email);
     if (!user) {
       throw new AppError('Email not found', 404);
     }
