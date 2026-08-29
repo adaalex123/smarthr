@@ -1,12 +1,12 @@
 import express from 'express';
-import {
-  createJob,
-  getAllApplications,
+import { 
   getApplicants,
   getCandidates,
   getDashboard,
   getJobs,
   getMessages,
+  createJob,
+  getAllApplications
 } from '../controllers/employerController.js';
 import { authenticateToken } from '../middlewares/authenticateToken.js';
 import { authorizeRole } from '../middlewares/authorizeRole.js';
@@ -14,12 +14,14 @@ import { createJobValidation, validate } from '../middlewares/validation.js';
 
 const router = express.Router();
 
+// All employer routes need auth + employer role
 router.use(authenticateToken);
-router.use(authorizeRole('employer', 'recruiter'));
+router.use(authorizeRole('employer'));
 
 router.get('/dashboard', getDashboard);
 router.get('/jobs', getJobs);
-router.post('/jobs', validate(createJobValidation), createJob);
+// in employerRoutes.ts
+router.post('/jobs', createJobValidation, validate, createJob);
 router.get('/applications', getAllApplications);
 router.get('/candidates', getCandidates);
 router.get('/messages', getMessages);

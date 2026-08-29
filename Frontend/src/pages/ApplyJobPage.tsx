@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent, type ChangeEvent } from 'react' // 1. added ChangeEvent
 import { Link, useParams } from 'react-router-dom'
 import { useAuth } from '../AuthContext'
 import { apiRequest } from '../api/client'
@@ -17,21 +17,25 @@ export default function ApplyJobPage() {
   const { id } = useParams()
   const { user } = useAuth()
   const [job, setJob] = useState<PublicJob | null>(null)
+
+  // 2. ADDED resumeFile TO STATE
   const [form, setForm] = useState({
-    fullName: user?.fullName ?? '',
-    email: user?.email ?? '',
+    fullName: user?.fullName?? '',
+    email: user?.email?? '',
     resumeText: '',
+    resumeFile: null as File | null, // new
   })
+
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const [result, setResult] = useState<ApplyResult | null>(null)
   const signedIn = Boolean(user)
-  const dashboardPath = user ? homePath(user.role) : '/login'
+  const dashboardPath = user? homePath(user.role) : '/login'
 
   useEffect(() => {
     if (!user) return
     setForm((current) => ({
-      ...current,
+     ...current,
       fullName: current.fullName || user.fullName || '',
       email: user.email,
     }))
@@ -40,9 +44,16 @@ export default function ApplyJobPage() {
   useEffect(() => {
     if (!id) return
     void apiRequest<{ job?: PublicJob }>(`/jobs/${id}`)
-      .then((data) => setJob(data.job ?? null))
-      .catch((err) => setError(err instanceof Error ? err.message : 'Job not found'))
+     .then((data) => setJob(data.job?? null))
+     .catch((err) => setError(err instanceof Error? err.message : 'Job not found'))
   }, [id])
+
+  // 3. NEW HANDLER FOR FILE INPUT
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setForm((c) => ({...c, resumeFile: e.target.files![0], resumeText: '' })) // clear textarea if file picked
+    }
+  }
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault()
@@ -50,13 +61,23 @@ export default function ApplyJobPage() {
     setBusy(true)
     setError('')
     try {
+      // 4. CHANGED TO FORMDATA BECAUSE OF FILE
+      const formData = new FormData()
+      formData.append('fullName', form.fullName)
+      formData.append('email', form.email)
+      if (form.resumeFile) {
+        formData.append('resumeFile', form.resumeFile)
+      } else {
+        formData.append('resumeText', form.resumeText)
+      }
+
       const data = await apiRequest<{ application?: ApplyResult }>(`/jobs/${id}/apply`, {
         method: 'POST',
-        body: JSON.stringify(form),
+        body: formData, // apiRequest must NOT set Content-Type header when body is FormData
       })
       if (data.application) setResult(data.application)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not submit application')
+      setError(err instanceof Error? err.message : 'Could not submit application')
     } finally {
       setBusy(false)
     }
@@ -66,15 +87,15 @@ export default function ApplyJobPage() {
     <div className="recruiter-workspace">
       <header className="rw-top">
         <div>
-          <h1>{job?.title ?? 'Apply'}</h1>
-          <p>{job ? `${job.companyName}${job.location ? ` · ${job.location}` : ''}` : 'Loading job...'}</p>
+          <h1>{job?.title?? 'Apply'}</h1>
+          <p>{job? `${job.companyName}${job.location? ` · ${job.location}` : ''}` : 'Loading job...'}</p>
         </div>
         <Link to="/" className="rw-ghost">Back home</Link>
       </header>
 
       {error && <div className="rw-banner">{error}</div>}
 
-      {job && !result && (
+      {job &&!result && (
         <div className="rw-grid">
           <section className="rw-card">
             <h2>Role</h2>
@@ -83,14 +104,36 @@ export default function ApplyJobPage() {
           </section>
           <section className="rw-card">
             <h2>Apply with your resume</h2>
-            <form onSubmit={onSubmit}>
+            <form onSubmit={onSubmit} encType="multipart/form-data"> {/* 5. ADDED encType */}
               <label htmlFor="fullName">Full name</label>
-              <input id="fullName" value={form.fullName} onChange={(e) => setForm((c) => ({ ...c, fullName: e.target.value }))} />
+              <input id="fullName" name="fullName" value={form.fullName} onChange={(e) => setForm((c) => ({...c, fullName: e.target.value }))} required />
+
               <label htmlFor="email">Email</label>
-              <input id="email" type="email" value={form.email} onChange={(e) => setForm((c) => ({ ...c, email: e.target.value }))} readOnly={signedIn} />
-              <label htmlFor="resumeText">Paste resume text</label>
-              <textarea id="resumeText" rows={10} value={form.resumeText} onChange={(e) => setForm((c) => ({ ...c, resumeText: e.target.value }))} placeholder="Paste the text of your resume. PDF upload comes later." />
-              <button className="rw-primary" type="submit" disabled={busy}>{busy ? 'Scoring...' : 'Submit application'}</button>
+              <input id="email" name="email" type="email" value={form.email} onChange={(e) => setForm((c) => ({...c, email: e.target.value }))} readOnly={signedIn} required />
+
+              {/* 6. NEW FILE INPUT */}
+              <label htmlFor="resumeFile">Upload Resume / CV</label>
+              <input
+                id="resumeFile"
+                name="resumeFile"
+                type="file"
+                accept=".pdf,.doc,.docx"
+                onChange={handleFileChange}
+              />
+              {form.resumeFile && <p className="rw-muted">Selected: {form.resumeFile.name}</p>}
+
+              <label htmlFor="resumeText">Or Paste resume text</label>
+              <textarea
+                id="resumeText"
+                name="resumeText"
+                rows={6}
+                value={form.resumeText}
+                onChange={(e) => setForm((c) => ({...c, resumeText: e.target.value, resumeFile: null }))} // clear file if typing
+                placeholder="Paste the text of your resume. Or upload file above."
+              />
+              <button className="rw-primary" type="submit" disabled={busy || (!form.resumeFile &&!form.resumeText)}>
+                {busy? 'Scoring...' : 'Submit application'}
+              </button>
             </form>
           </section>
         </div>
@@ -105,7 +148,7 @@ export default function ApplyJobPage() {
           <p><strong>Missing skills:</strong> {result.explanation.missingSkills.join(', ') || 'None'}</p>
           <p className="rw-muted">The recruiter sees the same explanation so ranking stays transparent.</p>
           <p>
-            <Link to={dashboardPath}>{user?.role === 'candidate' ? 'Open candidate dashboard' : 'Back to workspace'}</Link>
+            <Link to={dashboardPath}>{user?.role === 'candidate'? 'Open candidate dashboard' : 'Back to workspace'}</Link>
             {' · '}
             <Link to="/">Browse more roles</Link>
           </p>

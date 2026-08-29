@@ -1,155 +1,138 @@
-import { NextFunction, Request, Response } from 'express';
-import { ValidationChain, body, validationResult } from 'express-validator';
-import { AppError } from '../utils/errorHandler.js';
+import type { RequestHandler, Response } from 'express';
+import { body, validationResult, type ValidationChain } from 'express-validator';
 
-export const validate = (validations: ValidationChain[]) => {
-  return async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      await Promise.all(validations.map((validation) => validation.run(req)));
-
-      const errors = validationResult(req);
-      if (errors.isEmpty()) {
-        return next();
-      }
-
-      const formattedErrors = errors.array().map((err) => ({
-        field: 'path' in err ? String(err.path) : 'unknown',
-        message: err.msg,
-      }));
-
-      throw new AppError('Validation failed', 400, formattedErrors);
-    } catch (error) {
-      next(error);
-    }
-  };
-};
-
-const optionalPhone = body('phone')
-  .optional({ values: 'falsy' })
-  .trim()
-  .custom((value) => {
-    const digits = String(value).replace(/\D/g, '');
-    return digits.length >= 7 && digits.length <= 15;
-  })
-  .withMessage('Enter a valid phone number');
-
-const recruiterProfileRules: ValidationChain[] = [
-  body('recruiterProfile.companyName')
-    .optional({ values: 'falsy' })
+// For Job Application
+export const applyJobValidation = [
+  body('fullName')
     .trim()
-    .isLength({ min: 2, max: 150 }).withMessage('Company name must be between 2 and 150 characters'),
+    .notEmpty().withMessage('Full name is required')
+    .isLength({ min: 2, max: 100 }).withMessage('Full name must be between 2 and 100 characters'),
 
-  body('recruiterProfile.companyWebsite')
-    .optional({ values: 'falsy' })
-    .trim()
-    .matches(/^https?:\/\/\S+$/i)
-    .withMessage('Company website must start with http:// or https://'),
-
-  body('recruiterProfile.industry')
-    .optional({ values: 'falsy' })
-    .trim()
-    .isLength({ min: 2, max: 100 }).withMessage('Industry must be between 2 and 100 characters'),
-
-  body('recruiterProfile.jobTitle')
-    .optional({ values: 'falsy' })
-    .trim()
-    .isLength({ min: 2, max: 100 }).withMessage('Recruiter role must be between 2 and 100 characters'),
-
-  body('recruiterProfile.country')
-    .optional({ values: 'falsy' })
-    .trim()
-    .isLength({ min: 2, max: 100 }).withMessage('Country must be between 2 and 100 characters'),
-
-  body('recruiterProfile.linkedIn')
-    .optional({ values: 'falsy' })
-    .trim()
-    .isLength({ max: 255 }).withMessage('LinkedIn profile is too long'),
-];
-
-export const registerValidation = [
   body('email')
     .trim()
     .notEmpty().withMessage('Email is required')
     .isEmail().withMessage('Invalid email format')
     .normalizeEmail(),
 
-  body('password')
-    .notEmpty().withMessage('Password is required')
-    .isLength({ min: 8 }).withMessage('Password must be at least 8 characters')
-    .matches(/[A-Za-z]/).withMessage('Password must contain a letter')
-    .matches(/[0-9]/).withMessage('Password must contain a number')
-    .matches(/[^A-Za-z0-9]/).withMessage('Password must contain a special character'),
-
-  body('role')
-    .notEmpty().withMessage('Please choose an account type')
-    .isIn(['admin', 'employer', 'recruiter', 'candidate']).withMessage('Role must be candidate, recruiter, or admin'),
-
-  body('fullName')
+  // resumeText is optional now
+  body('resumeText')
     .optional({ values: 'falsy' })
     .trim()
-    .isLength({ min: 2, max: 100 }).withMessage('Full name must be between 2 and 100 characters'),
+    .isLength({ min: 40, max: 20000 }).withMessage('Paste at least 40 characters from the resume'),
 
-  optionalPhone,
-
-  body('country')
-    .optional({ values: 'falsy' })
-    .trim()
-    .isLength({ min: 2, max: 100 }).withMessage('Country must be between 2 and 100 characters'),
-
-  ...recruiterProfileRules,
+  // custom check: require either resumeText OR file
+  body().custom((value, { req }) => {
+    const hasText = req.body.resumeText && req.body.resumeText.trim().length >= 40;
+    const hasFile = !!req.file; // multer puts file here
+    if (!hasText && !hasFile) {
+      throw new Error('Please upload a resume file or paste resume text');
+    }
+    return true;
+  }),
 ];
 
+// For User Registration
+export const registerValidation = [
+  body('fullName')
+    .trim()
+    .notEmpty().withMessage('Full name is required')
+    .isLength({ min: 2, max: 100 }),
+  body('email')
+    .trim()
+    .notEmpty().withMessage('Email is required')
+    .isEmail().withMessage('Valid email is required')
+    .normalizeEmail(),
+  body('password')
+    .isLength({ min: 8 }).withMessage('Password must be at least 8 characters')
+];
+
+// For Login
 export const loginValidation = [
   body('email')
     .trim()
     .notEmpty().withMessage('Email is required')
-    .isEmail().withMessage('Invalid email format')
+    .isEmail().withMessage('Valid email is required')
     .normalizeEmail(),
-
   body('password')
-    .notEmpty().withMessage('Password is required'),
+    .notEmpty().withMessage('Password is required')
 ];
 
+// For OAuth Login/Register
 export const oauthValidation = [
-  body('idToken')
+  body('email')
     .trim()
-    .notEmpty().withMessage('idToken is required'),
-
-  body('role')
-    .optional()
-    .isIn(['admin', 'employer', 'recruiter', 'candidate']).withMessage('Role must be candidate, recruiter, or admin'),
+    .notEmpty().withMessage('Email is required')
+    .isEmail().withMessage('Valid email is required')
+    .normalizeEmail(),
+  body('password')
+    .isLength({ min: 8 }).withMessage('Password must be at least 8 characters')
 ];
 
+// For Update Profile
 export const updateProfileValidation = [
   body('fullName')
-    .optional({ values: 'falsy' })
+    .optional()
     .trim()
     .isLength({ min: 2, max: 100 }).withMessage('Full name must be between 2 and 100 characters'),
-
-  optionalPhone,
-  ...recruiterProfileRules,
+  body('email')
+    .optional()
+    .trim()
+    .isEmail().withMessage('Valid email is required')
+    .normalizeEmail(),
+  body('phone')
+    .optional()
+    .trim()
+    .isLength({ max: 20 }).withMessage('Phone number too long')
 ];
 
+// For Forgot Password
 export const forgotPasswordValidation = [
   body('email')
     .trim()
     .notEmpty().withMessage('Email is required')
-    .isEmail().withMessage('Invalid email format')
-    .normalizeEmail(),
+    .isEmail().withMessage('Valid email is required')
+    .normalizeEmail()
 ];
 
+// For Reset Password
 export const resetPasswordValidation = [
   body('token')
-    .notEmpty().withMessage('Reset token is required'),
-
+    .notEmpty().withMessage('Token is required'),
   body('newPassword')
-    .notEmpty().withMessage('New password is required')
     .isLength({ min: 8 }).withMessage('Password must be at least 8 characters')
-    .matches(/[A-Za-z]/).withMessage('Password must contain a letter')
-    .matches(/[0-9]/).withMessage('Password must contain a number')
-    .matches(/[^A-Za-z0-9]/).withMessage('Password must contain a special character'),
 ];
 
+const handleValidationErrors: RequestHandler = (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    res.status(400).json({
+      message: 'Validation failed',
+      errors: errors.array(),
+    });
+    return;
+  }
+
+  next();
+};
+
+export function validate(validations: ValidationChain[]): RequestHandler[];
+export function validate(req: Parameters<RequestHandler>[0], res: Response, next: Parameters<RequestHandler>[2]): void;
+export function validate(
+  validationsOrReq: ValidationChain[] | Parameters<RequestHandler>[0],
+  res?: Response,
+  next?: Parameters<RequestHandler>[2]
+): RequestHandler[] | void {
+  if (Array.isArray(validationsOrReq)) {
+    return [...validationsOrReq, handleValidationErrors];
+  }
+
+  if (!res || !next) {
+    throw new TypeError('validate middleware requires req, res, and next');
+  }
+
+  handleValidationErrors(validationsOrReq, res, next);
+}
+// Used by employerRoutes.ts and recruiterRoutes.ts when creating jobs
 export const createJobValidation = [
   body('title')
     .trim()
@@ -170,22 +153,4 @@ export const createJobValidation = [
     .optional({ values: 'falsy' })
     .trim()
     .isLength({ max: 120 }).withMessage('Location is too long'),
-];
-
-export const applyJobValidation = [
-  body('fullName')
-    .trim()
-    .notEmpty().withMessage('Full name is required')
-    .isLength({ min: 2, max: 100 }).withMessage('Full name must be between 2 and 100 characters'),
-
-  body('email')
-    .trim()
-    .notEmpty().withMessage('Email is required')
-    .isEmail().withMessage('Invalid email format')
-    .normalizeEmail(),
-
-  body('resumeText')
-    .trim()
-    .notEmpty().withMessage('Resume text is required')
-    .isLength({ min: 40, max: 20000 }).withMessage('Paste at least 40 characters from the resume'),
 ];

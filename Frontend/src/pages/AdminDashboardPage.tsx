@@ -85,10 +85,10 @@ export default function AdminDashboardPage() {
   const initials = displayName.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase()
 
   const statCards = [
-    { label: 'Total Users', value: stats?.totalUsers ?? users.length, icon: '👥', accent: 'purple' },
-    { label: 'Recruiters', value: stats?.totalRecruiters ?? users.filter((u) => u.role === 'employer' || u.role === 'recruiter').length, icon: '💼', accent: 'blue' },
-    { label: 'Candidates', value: stats?.totalCandidates ?? users.filter((u) => u.role === 'candidate').length, icon: '👤', accent: 'pink' },
-    { label: 'Admins', value: stats?.totalAdmins ?? users.filter((u) => u.role === 'admin').length, icon: '🛡️', accent: 'green' },
+    { label: 'Total Users', value: stats?.totalUsers ?? users.length, icon: 'U', accent: 'purple' },
+    { label: 'Recruiters', value: stats?.totalRecruiters ?? users.filter((u) => u.role === 'employer' || u.role === 'recruiter').length, icon: 'R', accent: 'blue' },
+    { label: 'Candidates', value: stats?.totalCandidates ?? users.filter((u) => u.role === 'candidate').length, icon: 'C', accent: 'pink' },
+    { label: 'Admins', value: stats?.totalAdmins ?? users.filter((u) => u.role === 'admin').length, icon: 'A', accent: 'green' },
   ]
 
   return (
@@ -110,9 +110,9 @@ export default function AdminDashboardPage() {
         <nav className="ad-nav">
           <p className="ad-nav-label">Main Navigation</p>
           {[
-            { id: 'dashboard', icon: '⊞', label: 'Dashboard' },
-            { id: 'users', icon: '👥', label: 'Users' },
-            { id: 'settings', icon: '⚙️', label: 'Settings' },
+            { id: 'dashboard', icon: 'D', label: 'Dashboard' },
+            { id: 'users', icon: 'U', label: 'Users' },
+            { id: 'settings', icon: 'S', label: 'Settings' },
           ].map((item) => (
             <button
               key={item.id}
@@ -126,7 +126,7 @@ export default function AdminDashboardPage() {
           ))}
 
           <button type="button" className="ad-nav-item ad-nav-logout" onClick={() => void handleLogout()}>
-            <span className="ad-nav-icon">⏻</span> Log Out
+            <span className="ad-nav-icon">L</span> Log Out
           </button>
         </nav>
       </aside>
@@ -135,16 +135,16 @@ export default function AdminDashboardPage() {
       <main className="ad-main">
         <header className="ad-topbar">
           <div>
-            <h1>Employer Dashboard</h1>
+            <h1>Admin Dashboard</h1>
             <nav className="ad-breadcrumb">
               <span>Admin</span>
-              <span className="ad-bc-sep">›</span>
+              <span className="ad-bc-sep">/</span>
               <span>Dashboard</span>
-              <span className="ad-bc-sep">›</span>
+              <span className="ad-bc-sep">/</span>
               <span className="ad-bc-active">Platform Statistics</span>
             </nav>
           </div>
-          <button type="button" className="ad-topbar-btn" onClick={() => void loadData()}>↻ Refresh</button>
+          <button type="button" className="ad-topbar-btn" onClick={() => void loadData()}>Refresh</button>
         </header>
 
         {error && <div className="ad-banner">{error}</div>}
@@ -186,7 +186,7 @@ export default function AdminDashboardPage() {
                 <tbody>
                   {recentUsers.map((item) => (
                     <tr key={item.id}>
-                      <td><strong>{item.fullName || '—'}</strong></td>
+                      <td><strong>{item.fullName || '-'}</strong></td>
                       <td className="ad-muted-cell">{item.email}</td>
                       <td><span className="ad-pill">{item.role}</span></td>
                       <td>
