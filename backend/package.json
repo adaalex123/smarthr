@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "npm run prisma:generate && dotenv -e .env.development -- tsx watch src/server.ts --env=development",
-    "start": "node dist/server.js",
+    "start": "node dist/src/server.js",
     "start:staging": "dotenv -e .env.staging -- tsx src/server.ts --env=staging",
     "build": "npm run prisma:generate && npm run prisma:push && tsc",
     "typecheck": "tsc --noEmit",
