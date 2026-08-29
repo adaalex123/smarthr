@@ -34,17 +34,17 @@ export default function JobBasketModal({
               <path d="M4 8h16l-1.5 12h-13L4 8z" />
               <path d="M9 8V5a3 3 0 0 1 6 0v3" />
             </svg>
-            <h3>Job Basket ({savedJobs.length})</h3>
+            <h3>Saved jobs ({savedJobs.length})</h3>
           </div>
-          <button className="tf-close-btn" onClick={onClose}>✕</button>
+          <button className="tf-close-btn" onClick={onClose} aria-label="Close">x</button>
         </div>
 
         <div className="tf-modal-body">
           {savedJobs.length === 0 ? (
             <div className="tf-empty-basket">
-              <div className="basket-icon-placeholder">🧺</div>
-              <p>Your job basket is currently empty.</p>
-              <span className="sub-text">Click <strong>+ ADD</strong> on any job card to save it to your basket for quick application.</span>
+              <div className="basket-icon-placeholder">0</div>
+              <p>No saved jobs yet.</p>
+              <span className="sub-text">Saved roles will appear here for quick access.</span>
             </div>
           ) : (
             <div className="tf-basket-list">
@@ -53,8 +53,8 @@ export default function JobBasketModal({
                   <div className="item-details">
                     <h4>{job.title}</h4>
                     <div className="item-meta">
-                      <span>📍 {job.location}</span>
-                      <span>💰 {job.salary}</span>
+                      <span>{job.location}</span>
+                      <span>{job.salary}</span>
                       <span className="type-tag">{job.type}</span>
                     </div>
                   </div>
@@ -64,7 +64,7 @@ export default function JobBasketModal({
                     </Link>
                     {onRemoveItem && (
                       <button className="remove-btn" onClick={() => onRemoveItem(job.id)} title="Remove">
-                        🗑️
+                        Remove
                       </button>
                     )}
                   </div>
@@ -82,7 +82,7 @@ export default function JobBasketModal({
               </button>
             )}
             <Link to="/signup" className="apply-all-btn" onClick={onClose}>
-              Proceed to Apply ({savedJobs.length}) →
+              Apply to saved jobs ({savedJobs.length})
             </Link>
           </div>
         )}

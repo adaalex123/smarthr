@@ -5,7 +5,7 @@ import Header from '../components/Header'
 import Footer from '../components/Footer'
 import '../styles/landing.css'
 
-interface FaqItem {
+type FaqItem = {
   id: string
   q: string
   a: string
@@ -14,224 +14,187 @@ interface FaqItem {
 const FAQ_LIST: FaqItem[] = [
   {
     id: 'faq-1',
-    q: 'How do I create an account?',
-    a: 'Click Register in the navigation bar, choose Candidate if you are looking for a job, or Employer / Recruiter if you are hiring. You can be on the platform in under two minutes.',
+    q: 'Can candidates see their match score?',
+    a: 'Yes. Candidates see the same match summary recruiters use, including matched skills and missing requirements.',
   },
   {
     id: 'faq-2',
-    q: 'How does SmartHR rank candidates?',
-    a: 'Our AI computes semantic similarity between each resume and the job description using vector matching. Scores are broken down into skill overlap, semantic relevance, and experience signals — and every ranking shows a plain-English explanation so no result is a black box.',
+    q: 'What does a recruiter need to start?',
+    a: 'A recruiter account, company profile, and one job description. SmartHR ranks each application against that job.',
   },
   {
     id: 'faq-3',
-    q: 'What happens after my application is submitted?',
-    a: 'You instantly receive a match score and a breakdown of how your resume compares to the job requirements. The recruiter sees the same breakdown, so the process is fully transparent from day one.',
+    q: 'Can applicants upload resumes?',
+    a: 'Yes. Applicants can upload a PDF, DOC, or DOCX resume, or paste resume text directly into the application form.',
   },
   {
     id: 'faq-4',
-    q: 'Can I update my resume after applying?',
-    a: 'Yes. Log in to your candidate dashboard, go to your profile, and paste an updated resume. Re-rankings apply to new jobs you apply for — existing applications keep their original score.',
+    q: 'Is the ranking only keyword matching?',
+    a: 'No. The scoring combines semantic similarity and skill overlap, then explains the result in plain language.',
   },
 ]
 
-const CATEGORY_TICKER = [
-  'ENGINEERING',
-  'PRODUCT DESIGN',
-  'DATA & AI',
-  'MARKETING',
-  'OPERATIONS',
-  'FINANCE',
+const ROLES = [
+  {
+    title: 'For recruiters',
+    body: 'Post roles, collect applications, and compare candidates in one focused workspace.',
+    to: '/signup?role=recruiter',
+    action: 'Open recruiter path',
+  },
+  {
+    title: 'For candidates',
+    body: 'Apply with a resume and understand how each application lines up with the role.',
+    to: '/signup?role=candidate',
+    action: 'Open candidate path',
+  },
+]
+
+const WORKFLOW = [
+  'Create a role with requirements that matter',
+  'Invite candidates through a public apply link',
+  'Review ranked applications with visible reasoning',
+]
+
+const METRICS = [
+  ['94%', 'top match example'],
+  ['3 min', 'average job setup'],
+  ['2 views', 'recruiter and candidate'],
 ]
 
 export default function LandingPage() {
-  const [keyword, setKeyword] = useState('')
-  const [expandedFaq, setExpandedFaq] = useState<string | null>(null)
-
-  const toggleFaq = (id: string) => {
-    setExpandedFaq(expandedFaq === id ? null : id)
-  }
+  const [expandedFaq, setExpandedFaq] = useState<string | null>(FAQ_LIST[0].id)
 
   return (
     <div className="tf-landing-wrapper">
       <Header />
 
-      {/* Hero */}
       <section className="tf-hero-section">
+        <div className="tf-hero-overlay" />
         <div className="tf-hero-container">
           <motion.div
-            className="tf-search-card"
-            initial={{ opacity: 0, y: 30 }}
+            className="tf-hero-copy"
+            initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 0.45 }}
           >
-            <form className="tf-search-form" onSubmit={(e) => e.preventDefault()}>
-              <input
-                type="text"
-                className="tf-input-field"
-                placeholder="E.G. PRODUCT DESIGNER"
-                value={keyword}
-                onChange={(e) => setKeyword(e.target.value)}
-              />
-              <button type="submit" className="tf-search-btn">
-                <span>🔍</span> SEARCH
-              </button>
-            </form>
-
-            <div className="tf-quick-searches">
-              <span className="label">Popular:</span>
-              <a href="#about">Engineering</a>
-              <span className="divider">|</span>
-              <a href="#about">Design</a>
-              <span className="divider">|</span>
-              <a href="#about">Data & AI</a>
-              <span className="divider">|</span>
-              <a href="#about">Marketing</a>
+            <span className="tf-eyebrow">Recruitment agency software</span>
+            <h1>SmartHR Recruitment</h1>
+            <p>
+              A calm workspace for publishing roles, screening resumes, and giving candidates a clearer view of where they stand.
+            </p>
+            <div className="tf-hero-actions">
+              <Link to="/signup?role=recruiter" className="tf-primary-link">Start hiring</Link>
+              <Link to="/signup?role=candidate" className="tf-secondary-link">Apply as candidate</Link>
             </div>
+          </motion.div>
+
+          <motion.div
+            className="tf-hero-ledger"
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.45, delay: 0.12 }}
+            aria-label="Hiring pipeline preview"
+          >
+            <div className="tf-ledger-head">
+              <span>Active shortlist</span>
+              <strong>Product Designer</strong>
+            </div>
+            {[
+              ['Ada Johnson', '94%', 'Strong systems and research overlap'],
+              ['Miles Carter', '82%', 'Good portfolio depth, missing analytics'],
+              ['Nora Lee', '76%', 'Relevant background, lighter SaaS evidence'],
+            ].map(([name, score, note]) => (
+              <div className="tf-ledger-row" key={name}>
+                <span>{name}</span>
+                <strong>{score}</strong>
+                <small>{note}</small>
+              </div>
+            ))}
           </motion.div>
         </div>
       </section>
 
-      {/* Category ticker */}
-      <section className="tf-ticker-bar">
-        <div className="tf-ticker-inner">
-          {CATEGORY_TICKER.map((cat, idx) => (
-            <span key={idx} className="tf-ticker-item">{cat}</span>
+      <section className="tf-metric-strip">
+        <div className="tf-metric-inner">
+          {METRICS.map(([value, label]) => (
+            <div key={label} className="tf-metric-item">
+              <strong>{value}</strong>
+              <span>{label}</span>
+            </div>
           ))}
         </div>
       </section>
 
-      {/* How it works */}
-      <section className="tf-process-section">
-        <div className="tf-process-container">
-          <motion.div
-            className="tf-steps-wrapper"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-          >
-            <div className="tf-step-connector" />
-
-            <div className="tf-step-item">
-              <div className="tf-step-icon-circle">
-                <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.6">
-                  <circle cx="12" cy="12" r="8" stroke="currentColor" />
-                  <path d="M12 4v16M4 12h16" stroke="currentColor" />
-                  <circle cx="12" cy="12" r="3" fill="currentColor" />
-                </svg>
-              </div>
-              <p className="tf-step-text">1. Create your account in under 2 minutes</p>
-            </div>
-
-            <div className="tf-step-item">
-              <div className="tf-step-icon-circle">
-                <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.6">
-                  <rect x="5" y="4" width="14" height="16" rx="2" stroke="currentColor" />
-                  <line x1="9" y1="9" x2="15" y2="9" stroke="currentColor" />
-                  <line x1="9" y1="13" x2="15" y2="13" stroke="currentColor" />
-                  <line x1="9" y1="17" x2="13" y2="17" stroke="currentColor" />
-                </svg>
-              </div>
-              <p className="tf-step-text">2. Apply with your resume — paste or upload</p>
-            </div>
-
-            <div className="tf-step-item">
-              <div className="tf-step-icon-circle">
-                <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.6">
-                  <path d="M14 3v4a1 1 0 0 0 1 1h4" stroke="currentColor" />
-                  <path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z" stroke="currentColor" />
-                  <path d="M9 15l2 2 4-4" stroke="currentColor" />
-                </svg>
-              </div>
-              <p className="tf-step-text">3. See your AI match score instantly</p>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* About / CTA */}
-      <section className="tf-welcome-section" id="about">
-        <div className="tf-welcome-container">
-          <h1 className="tf-welcome-heading">
-            Hiring powered by <span className="purple-accent">Transparent AI</span>
-          </h1>
-
-          <div className="tf-welcome-grid">
-            <div className="tf-editorial-text">
-              <p>
-                SmartHR replaces gut-feel shortlisting with semantic resume analysis. Every candidate gets a ranked score based on how their experience, skills, and language actually align with the job — not just keyword matches.
-              </p>
-              <p>
-                Recruiters see an explainable breakdown for every applicant: matched skills, missing skills, and overlapping terms. Candidates see the same thing, so there are no surprises and no black boxes.
-              </p>
-            </div>
-
-            <div className="tf-action-cards">
-              <Link to="/signup?role=recruiter" className="tf-action-card">
-                <img
-                  src="https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=600&q=80"
-                  alt="Post jobs and rank candidates"
-                />
-                <div className="tf-card-banner">
-                  <span>Post a job & rank candidates</span>
-                  <span className="arrow">›</span>
-                </div>
-              </Link>
-
-              <Link to="/signup?role=candidate" className="tf-action-card">
-                <img
-                  src="https://images.unsplash.com/photo-1586281380349-632531db7ed4?auto=format&fit=crop&w=600&q=80"
-                  alt="Apply and see your match score"
-                />
-                <div className="tf-card-banner">
-                  <span>Apply & see your match score</span>
-                  <span className="arrow">›</span>
-                </div>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Feature highlights (replacing the mock jobs sections) */}
-      <section className="tf-job-interest-section">
-        <div className="tf-job-interest-container">
-          <div className="tf-section-header-row">
-            <h2>Why SmartHR</h2>
+      <section className="tf-role-section" id="platform">
+        <div className="tf-section-shell">
+          <div className="tf-section-heading">
+            <span className="tf-eyebrow">Two clear paths</span>
+            <h2>Built around the people doing the hiring and the people applying.</h2>
           </div>
 
-          <div className="tf-interest-cards-grid">
-            {[
-              { title: 'AI Match Scoring', body: 'Every resume is vectorised and compared semantically against the job description — not just keyword-matched.' },
-              { title: 'Full Transparency', body: 'Candidates and recruiters see the same score breakdown: matched skills, gaps, and overlapping terms.' },
-              { title: 'Fast Onboarding', body: 'Register with email in under two minutes. Add full profile details whenever you\'re ready.' },
-            ].map((item) => (
-              <motion.div key={item.title} whileHover={{ y: -5 }}>
-                <div className="tf-purple-job-card">
-                  <div>
-                    <h3>{item.title}</h3>
-                    <div style={{ fontSize: '0.85rem', opacity: 0.9, marginTop: '0.4rem', lineHeight: 1.5 }}>{item.body}</div>
-                  </div>
-                </div>
-              </motion.div>
+          <div className="tf-role-grid">
+            {ROLES.map((role) => (
+              <Link to={role.to} className="tf-role-card" key={role.title}>
+                <span className="tf-role-kicker">{role.title}</span>
+                <p>{role.body}</p>
+                <strong>{role.action}</strong>
+              </Link>
             ))}
           </div>
         </div>
       </section>
 
-      {/* FAQ */}
+      <section className="tf-workflow-section" id="workflow">
+        <div className="tf-section-shell tf-workflow-shell">
+          <div>
+            <span className="tf-eyebrow">Workflow</span>
+            <h2>Every score keeps the job, resume, and explanation connected.</h2>
+            <p className="tf-section-copy">
+              Recruiters can move quickly without hiding the reasoning. Candidates get a useful result instead of a silent application.
+            </p>
+          </div>
+          <div className="tf-workflow-list">
+            {WORKFLOW.map((item, index) => (
+              <div className="tf-workflow-item" key={item}>
+                <span>{String(index + 1).padStart(2, '0')}</span>
+                <p>{item}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="tf-proof-section">
+        <div className="tf-section-shell tf-proof-grid">
+          <img
+            src="https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=1200&q=82"
+            alt="Recruitment team reviewing candidates"
+          />
+          <div className="tf-proof-copy">
+            <span className="tf-eyebrow">Operational by design</span>
+            <h2>Less theater, more useful review.</h2>
+            <p>
+              SmartHR keeps the experience practical: clear account paths, compact dashboards, useful tables, and explanations that can be read during real hiring work.
+            </p>
+          </div>
+        </div>
+      </section>
+
       <section className="tf-faq-section" id="faq">
         <div className="tf-faq-container">
-          <h2 className="tf-faq-title">Frequently Asked Questions</h2>
+          <div className="tf-section-heading">
+            <span className="tf-eyebrow">FAQ</span>
+            <h2>Questions teams usually ask first.</h2>
+          </div>
 
           <div className="tf-faq-accordion">
             {FAQ_LIST.map((faq) => {
               const isExpanded = expandedFaq === faq.id
               return (
                 <div key={faq.id} className="tf-faq-item">
-                  <button className="tf-faq-question" type="button" onClick={() => toggleFaq(faq.id)}>
+                  <button className="tf-faq-question" type="button" onClick={() => setExpandedFaq(isExpanded ? null : faq.id)}>
                     <span>{faq.q}</span>
-                    <span className={`tf-faq-chevron ${isExpanded ? 'expanded' : ''}`}>›</span>
+                    <span className={`tf-faq-chevron ${isExpanded ? 'expanded' : ''}`} aria-hidden />
                   </button>
                   <AnimatePresence>
                     {isExpanded && (
@@ -240,7 +203,7 @@ export default function LandingPage() {
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
                         exit={{ opacity: 0, height: 0 }}
-                        transition={{ duration: 0.3 }}
+                        transition={{ duration: 0.2 }}
                       >
                         {faq.a}
                       </motion.div>

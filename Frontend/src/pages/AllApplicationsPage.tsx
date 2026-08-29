@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { Fragment, useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../AuthContext'
 import { apiRequest } from '../api/client'
@@ -87,7 +87,7 @@ export default function AllApplicationsPage() {
           <p>Every candidate across all your job posts, filtered and ranked by match score.</p>
         </div>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
-          <Link to="/employer" className="rw-ghost">← Workspace</Link>
+          <Link to="/employer" className="rw-ghost">Workspace</Link>
           <button type="button" className="rw-ghost" onClick={() => void handleLogout()}>Log out</button>
         </div>
       </header>
@@ -158,8 +158,8 @@ export default function AllApplicationsPage() {
               </thead>
               <tbody>
                 {visible.map((app) => (
-                  <>
-                    <tr key={app.id}>
+                  <Fragment key={app.id}>
+                    <tr>
                       <td>
                         <strong>{app.fullName}</strong>
                         <div className="rw-muted">{app.email}</div>
@@ -186,7 +186,7 @@ export default function AllApplicationsPage() {
                         </td>
                       </tr>
                     )}
-                  </>
+                  </Fragment>
                 ))}
               </tbody>
             </table>

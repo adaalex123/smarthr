@@ -95,11 +95,10 @@ export default function CompleteProfilePage() {
             src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=1200&q=80"
             alt="Professional profile setup"
           />
-          <div className="logo"><i className="fas fa-user-check" /> SmartHR</div>
-          <div className="brand-tagline">Complete your profile and unlock your workspace.</div>
+          <div className="logo">SmartHR</div>
+          <div className="brand-tagline">Finish your profile once. Use it everywhere.</div>
           <div className="brand-copy">
-            Add the details SmartHR needs to personalise your experience, route you to the right workspace, and
-            keep recruiter profile data complete for transparent hiring.
+            Add the details SmartHR needs to send you to the right workspace and keep hiring records complete.
           </div>
           <div className="stats-grid">
             <div className="stat-item">
@@ -148,7 +147,7 @@ export default function CompleteProfilePage() {
                 </div>
 
                 <div className="role-detail-box">
-                  <div className="title"><i className="fas fa-building" /> Recruiter Details</div>
+                  <div className="title">Recruiter details</div>
                   <div className="form-row">
                     <div className="form-group">
                       <label htmlFor="companyName">Company Name</label>

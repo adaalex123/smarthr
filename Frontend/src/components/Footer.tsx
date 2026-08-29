@@ -11,23 +11,17 @@ export default function Footer() {
   return (
     <footer className="tf-footer">
       <div className="tf-footer-inner">
-        {/* Left Purple Logo Block */}
         <Link to="/" className="tf-footer-logo-block">
-          <span className="tf-logo-text">
-            smart hr<br />
-            recruitment<br />
-            agency
-          </span>
+          <span className="tf-logo-mark">SH</span>
+          <span className="tf-logo-text">SmartHR</span>
         </Link>
 
-        {/* Center Copyright Notice */}
         <div className="tf-copyright-text">
-          © 2026. Theme by CMSSuperheroes / Smart HR
+          SmartHR Recruitment Agency. Built for clearer hiring decisions.
         </div>
 
-        {/* Right Back to Top Button */}
         <button className="tf-back-to-top" onClick={scrollToTop}>
-          Back to Top <span className="top-icon">➇</span>
+          Back to top
         </button>
       </div>
     </footer>

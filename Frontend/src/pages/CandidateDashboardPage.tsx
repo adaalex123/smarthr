@@ -19,9 +19,9 @@ type DashboardData = {
 }
 
 const NAV: { id: NavId; label: string }[] = [
-  { id: 'dashboard', label: 'User Dashboard' },
-  { id: 'profile', label: 'My Profile' },
-  { id: 'jobs', label: 'My Jobs' },
+  { id: 'dashboard', label: 'Dashboard' },
+  { id: 'profile', label: 'Profile' },
+  { id: 'jobs', label: 'Applications' },
   { id: 'messages', label: 'Messages' },
   { id: 'settings', label: 'Settings' },
 ]
@@ -132,7 +132,7 @@ export default function CandidateDashboardPage() {
           <strong>{displayName}</strong>
           <p>Job seeker</p>
         </div>
-        <p className="cd-nav-label">Main Navigation</p>
+        <p className="cd-nav-label">Workspace</p>
         <nav className="cd-nav">
           {NAV.map((item) => (
             <button
@@ -151,7 +151,7 @@ export default function CandidateDashboardPage() {
       <main className="cd-main">
         <header className="cd-topbar">
           <div>
-            <h1>Candidate Dashboard</h1>
+            <h1>Candidate dashboard</h1>
             <p>Candidate / {section}</p>
           </div>
           <Link to="/" className="cd-topbar-btn">Browse jobs</Link>

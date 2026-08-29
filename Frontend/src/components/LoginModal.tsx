@@ -52,8 +52,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
   return (
     <div className="tf-modal-backdrop" onClick={onClose}>
       <div className="tf-login-modal-card" onClick={(e) => e.stopPropagation()}>
-        <div className="tf-modal-top-caret">◆</div>
-        <button className="tf-close-modal-x" type="button" onClick={onClose}>✕</button>
+        <button className="tf-close-modal-x" type="button" onClick={onClose} aria-label="Close">x</button>
 
         <div className="tf-login-card-body">
           <h3 className="tf-login-title">Sign in to SmartHR</h3>
@@ -85,10 +84,10 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
 
             <div className="tf-auth-btns-row">
               <button type="submit" className="tf-solid-login-btn" disabled={loading}>
-                {loading ? 'SIGNING IN...' : 'LOGIN'}
+                {loading ? 'Signing in...' : 'Sign in'}
               </button>
               <Link to="/signup" className="tf-outline-register-btn" onClick={onClose}>
-                REGISTER
+                Create account
               </Link>
             </div>
           </form>
@@ -99,12 +98,12 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
 
           <div className="tf-social-btns-stack">
             <button type="button" className="tf-social-btn google" onClick={() => void handleGoogle()} disabled={loading}>
-              <span className="icon">G</span> Continue with Google
+              Continue with Google
             </button>
           </div>
 
-          <div style={{ marginTop: '1.2rem', fontSize: '0.82rem', color: '#666', textAlign: 'center' }}>
-            No account? <Link to="/signup" onClick={onClose} style={{ color: 'var(--purple-dark)', fontWeight: 700 }}>Create one</Link>
+          <div className="tf-modal-signup-link">
+            No account? <Link to="/signup" onClick={onClose}>Create one</Link>
           </div>
         </div>
       </div>

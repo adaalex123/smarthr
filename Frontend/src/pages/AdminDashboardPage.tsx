@@ -96,7 +96,7 @@ export default function AdminDashboardPage() {
       {/* Sidebar */}
       <aside className="ad-sidebar">
         <div className="ad-sidebar-brand">
-          <Link to="/" className="ad-logo-block">smart hr<br />recruitment</Link>
+          <Link to="/" className="ad-logo-block"><span>SH</span> SmartHR</Link>
         </div>
 
         <div className="ad-profile-mini">
@@ -108,7 +108,7 @@ export default function AdminDashboardPage() {
         </div>
 
         <nav className="ad-nav">
-          <p className="ad-nav-label">Main Navigation</p>
+          <p className="ad-nav-label">Console</p>
           {[
             { id: 'dashboard', icon: 'D', label: 'Dashboard' },
             { id: 'users', icon: 'U', label: 'Users' },
@@ -135,13 +135,13 @@ export default function AdminDashboardPage() {
       <main className="ad-main">
         <header className="ad-topbar">
           <div>
-            <h1>Admin Dashboard</h1>
+            <h1>Admin dashboard</h1>
             <nav className="ad-breadcrumb">
               <span>Admin</span>
               <span className="ad-bc-sep">/</span>
-              <span>Dashboard</span>
+              <span>{activeNav === 'users' ? 'Users' : activeNav === 'settings' ? 'Settings' : 'Dashboard'}</span>
               <span className="ad-bc-sep">/</span>
-              <span className="ad-bc-active">Platform Statistics</span>
+              <span className="ad-bc-active">Platform control</span>
             </nav>
           </div>
           <button type="button" className="ad-topbar-btn" onClick={() => void loadData()}>Refresh</button>

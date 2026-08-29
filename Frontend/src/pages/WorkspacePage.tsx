@@ -33,7 +33,7 @@ type DashboardData = {
 
 const NAV: { id: NavId; label: string }[] = [
   { id: 'dashboard', label: 'Dashboard' },
-  { id: 'jobs', label: 'My Jobs' },
+  { id: 'jobs', label: 'Jobs' },
   { id: 'applicants', label: 'Applicants' },
   { id: 'candidates', label: 'Candidates' },
   { id: 'messages', label: 'Messages' },
@@ -163,9 +163,9 @@ export default function WorkspacePage() {
         <div className="ed-profile">
           <div className="ed-avatar">{initials}</div>
           <strong>{displayName}</strong>
-          <p>Employer / Recruiter</p>
+          <p>Recruiter workspace</p>
         </div>
-        <p className="ed-nav-label">Main Navigation</p>
+        <p className="ed-nav-label">Workspace</p>
         <nav className="ed-nav">
           {NAV.map((item) => (
             <button
@@ -185,10 +185,10 @@ export default function WorkspacePage() {
         <header className="ed-topbar">
           <div>
             <h1>{section}</h1>
-            <p>Hiring / {section}</p>
+            <p>Hiring workspace / {section}</p>
           </div>
           <button type="button" className="ed-post-btn" onClick={() => setActiveNav('jobs')}>
-            Post Your Job
+            Post job
           </button>
         </header>
 

@@ -19,9 +19,9 @@ import {
 import '../styles/signup.css'
 
 const ROLES: { id: UserRole; icon: string; title: string; desc: string }[] = [
-  { id: 'candidate', icon: 'fas fa-user', title: 'Candidate', desc: 'Apply to jobs and see how your resume matches each role.' },
-  { id: 'recruiter', icon: 'fas fa-briefcase', title: 'Employer / Recruiter', desc: 'Post jobs, rank applicants, and hire from one workspace.' },
-  { id: 'admin', icon: 'fas fa-user-gear', title: 'Administrator', desc: 'Manage the platform, users, roles and system settings.' },
+  { id: 'candidate', icon: 'CA', title: 'Candidate', desc: 'Apply to roles and review your match details.' },
+  { id: 'recruiter', icon: 'RE', title: 'Recruiter', desc: 'Post jobs, rank applicants, and manage your hiring workspace.' },
+  { id: 'admin', icon: 'AD', title: 'Admin', desc: 'Manage users, account status, and platform access.' },
 ]
 
 function afterAuth(user: { role: UserRole; fullName: string; recruiterProfile?: import('../types/auth').RecruiterProfile | null }, navigate: ReturnType<typeof useNavigate>) {
@@ -124,23 +124,23 @@ export default function SignupPage() {
       <div className="signup-card">
         <div className="brand-panel">
           <img className="bg-img" src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="HR team" />
-          <div className="logo"><i className="fas fa-brain" /> SmartHR</div>
-          <div className="brand-tagline"><i className="fas fa-robot" style={{ marginRight: 6, opacity: 0.7 }} /> Smarter Hiring. Better Careers. Powered by AI.</div>
-          <div className="brand-copy">SmartHR uses intelligent AI to screen resumes, rank candidates fairly, and connect the right talent with the right opportunities.</div>
+          <div className="logo">SmartHR</div>
+          <div className="brand-tagline">Choose the workspace that fits your day.</div>
+          <div className="brand-copy">One account flow, three clear destinations: candidate dashboard, recruiter workspace, or admin console.</div>
           <div className="stats-grid">
-            <div className="stat-item"><div className="label">Top Candidate</div><div className="value">Ada Johnson <small>94%</small></div></div>
-            <div className="stat-item"><div className="label">Bias Detector</div><div className="value"><i className="fas fa-check-circle" /> Passed</div></div>
-            <div className="stat-item"><div className="label">AI Match Score</div><div className="value">96% <small>· explainable ranking</small></div></div>
+            <div className="stat-item"><div className="label">Recruiter</div><div className="value">Create jobs <small>and review applicants</small></div></div>
+            <div className="stat-item"><div className="label">Candidate</div><div className="value">Apply faster <small>with a reusable profile</small></div></div>
+            <div className="stat-item"><div className="label">Admin</div><div className="value">Control access <small>from one console</small></div></div>
           </div>
           <div className="footer-note">
             <span>© 2026 SmartHR. All rights reserved.</span>
-            <Link to="/"><i className="fas fa-arrow-left" /> Back to landing</Link>
+            <Link to="/">Back to landing</Link>
           </div>
         </div>
 
         <div className="form-panel">
-          <h2>Create Your SmartHR Account</h2>
-          <div className="step-indicator"><i className="fas fa-circle-check" /> Choose your account type to get started</div>
+          <h2>Create your account</h2>
+          <div className="step-indicator">Choose account type</div>
 
           <div className="signup-section-label">Step 1: Select Account Type</div>
           <div className="role-grid">
@@ -151,7 +151,7 @@ export default function SignupPage() {
                 className={`role-card${role === item.id ? ' active' : ''}${item.id === 'admin' ? ' full-width' : ''}`}
                 onClick={() => { setRole(item.id); setErrors({}) }}
               >
-                <i className={item.icon} />
+                <span className="role-card-symbol">{item.icon}</span>
                 <div><span className="role-label">{item.title}</span><span className="role-desc">{item.desc}</span></div>
               </button>
             ))}
@@ -193,7 +193,7 @@ export default function SignupPage() {
                     <label htmlFor="password">Password</label>
                     <input id="password" type="password" placeholder="Create a password" value={recruiterForm.password} onChange={(e) => updateRecruiter('password', e.target.value)} />
                     <ul className="password-rules-list">
-                      {rules.map((rule) => <li key={rule.id} style={{ color: rule.ok ? '#1b7f4a' : '#b42318' }}>{rule.ok ? '✓' : '•'} {rule.label}</li>)}
+                      {rules.map((rule) => <li key={rule.id} className={rule.ok ? 'ok' : ''}><span>{rule.ok ? 'Met' : 'Needs'}</span>{rule.label}</li>)}
                     </ul>
                     {fieldError(errors, 'password')}
                   </div>
@@ -205,7 +205,7 @@ export default function SignupPage() {
                 </div>
 
                 <div className="role-detail-box">
-                  <div className="title"><i className="fas fa-building" /> Company details</div>
+                  <div className="title">Company details</div>
                   <div className="form-row">
                     <div className="form-group">
                       <label htmlFor="companyName">Company Name</label>
@@ -249,7 +249,7 @@ export default function SignupPage() {
                   <label htmlFor="password">Password</label>
                   <input id="password" type="password" placeholder="Create a password" value={basicForm.password} onChange={(e) => setBasicForm((c) => ({ ...c, password: e.target.value }))} />
                   <ul className="password-rules-list">
-                    {rules.map((rule) => <li key={rule.id} style={{ color: rule.ok ? '#1b7f4a' : '#b42318' }}>{rule.ok ? '✓' : '•'} {rule.label}</li>)}
+                    {rules.map((rule) => <li key={rule.id} className={rule.ok ? 'ok' : ''}><span>{rule.ok ? 'Met' : 'Needs'}</span>{rule.label}</li>)}
                   </ul>
                   {fieldError(errors, 'password')}
                 </div>
@@ -268,14 +268,14 @@ export default function SignupPage() {
             {errors.terms && <span className="field-error">{errors.terms}</span>}
 
             <button className="btn-primary" type="submit" disabled={busy || !selected}>
-              <i className={isHiring ? 'fas fa-briefcase' : 'fas fa-user-plus'} /> {busy ? 'Creating account...' : `Create ${selected?.title ?? ''} Account`}
+              {busy ? 'Creating account...' : `Create ${selected?.title ?? ''} account`}
             </button>
 
             <div className="inline-divider"><span>OR</span></div>
 
             <div className="social-login">
               <button type="button" className="social-btn" onClick={() => void onGoogle()} disabled={busy}>
-                <i className="fab fa-google" style={{ color: '#ea4335' }} /> Continue with Google
+                Continue with Google
               </button>
             </div>
 

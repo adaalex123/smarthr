@@ -9,12 +9,12 @@ type ToolbarAction = {
 }
 
 const TOOLBAR: ToolbarAction[] = [
-  { label: 'B', title: 'Bold — wrap with **', format: 'bold' },
+  { label: 'B', title: 'Bold: wrap with **', format: 'bold' },
   { label: 'H2', title: 'Section heading', format: 'h2' },
   { label: 'H3', title: 'Sub-heading', format: 'h3' },
-  { label: '• List', title: 'Bullet list item', format: 'ul' },
+  { label: '- List', title: 'Bullet list item', format: 'ul' },
   { label: '1. List', title: 'Numbered list item', format: 'ol' },
-  { label: '—', title: 'Separator line', format: 'separator' },
+  { label: 'Line', title: 'Separator line', format: 'separator' },
 ]
 
 function applyFormat(
@@ -105,7 +105,7 @@ export default function RichTextarea({ id, value, onChange, placeholder, rows = 
             {action.label}
           </button>
         ))}
-        <span className="rta-hint">Markdown · Headers, bold, lists</span>
+        <span className="rta-hint">Markdown: headers, bold, lists</span>
       </div>
       <textarea
         ref={ref}

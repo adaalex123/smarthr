@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent, type ChangeEvent } from 'react' // 1. added ChangeEvent
+import { useEffect, useState, type FormEvent, type ChangeEvent } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useAuth } from '../AuthContext'
 import { apiRequest } from '../api/client'
@@ -18,12 +18,11 @@ export default function ApplyJobPage() {
   const { user } = useAuth()
   const [job, setJob] = useState<PublicJob | null>(null)
 
-  // 2. ADDED resumeFile TO STATE
   const [form, setForm] = useState({
     fullName: user?.fullName?? '',
     email: user?.email?? '',
     resumeText: '',
-    resumeFile: null as File | null, // new
+    resumeFile: null as File | null,
   })
 
   const [error, setError] = useState('')
@@ -48,10 +47,9 @@ export default function ApplyJobPage() {
      .catch((err) => setError(err instanceof Error? err.message : 'Job not found'))
   }, [id])
 
-  // 3. NEW HANDLER FOR FILE INPUT
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setForm((c) => ({...c, resumeFile: e.target.files![0], resumeText: '' })) // clear textarea if file picked
+      setForm((c) => ({...c, resumeFile: e.target.files![0], resumeText: '' }))
     }
   }
 
@@ -61,7 +59,6 @@ export default function ApplyJobPage() {
     setBusy(true)
     setError('')
     try {
-      // 4. CHANGED TO FORMDATA BECAUSE OF FILE
       const formData = new FormData()
       formData.append('fullName', form.fullName)
       formData.append('email', form.email)
@@ -73,7 +70,7 @@ export default function ApplyJobPage() {
 
       const data = await apiRequest<{ application?: ApplyResult }>(`/jobs/${id}/apply`, {
         method: 'POST',
-        body: formData, // apiRequest must NOT set Content-Type header when body is FormData
+        body: formData,
       })
       if (data.application) setResult(data.application)
     } catch (err) {
@@ -104,14 +101,13 @@ export default function ApplyJobPage() {
           </section>
           <section className="rw-card">
             <h2>Apply with your resume</h2>
-            <form onSubmit={onSubmit} encType="multipart/form-data"> {/* 5. ADDED encType */}
+            <form onSubmit={onSubmit} encType="multipart/form-data">
               <label htmlFor="fullName">Full name</label>
               <input id="fullName" name="fullName" value={form.fullName} onChange={(e) => setForm((c) => ({...c, fullName: e.target.value }))} required />
 
               <label htmlFor="email">Email</label>
               <input id="email" name="email" type="email" value={form.email} onChange={(e) => setForm((c) => ({...c, email: e.target.value }))} readOnly={signedIn} required />
 
-              {/* 6. NEW FILE INPUT */}
               <label htmlFor="resumeFile">Upload Resume / CV</label>
               <input
                 id="resumeFile"
@@ -128,8 +124,8 @@ export default function ApplyJobPage() {
                 name="resumeText"
                 rows={6}
                 value={form.resumeText}
-                onChange={(e) => setForm((c) => ({...c, resumeText: e.target.value, resumeFile: null }))} // clear file if typing
-                placeholder="Paste the text of your resume. Or upload file above."
+                onChange={(e) => setForm((c) => ({...c, resumeText: e.target.value, resumeFile: null }))}
+                placeholder="Paste resume text if you prefer not to upload a file."
               />
               <button className="rw-primary" type="submit" disabled={busy || (!form.resumeFile &&!form.resumeText)}>
                 {busy? 'Scoring...' : 'Submit application'}
