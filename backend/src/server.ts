@@ -31,9 +31,17 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 
+const authEntryPaths = new Set([
+  `${apiBase}/auth/login`,
+  `${apiBase}/auth/oauth`,
+  `${apiBase}/auth/signup`,
+  `${apiBase}/auth/register`,
+]);
+
 app.use(rateLimit({
   windowMs: config.rateLimit.windowMs,
   max: config.rateLimit.max,
+  skip: (req) => authEntryPaths.has(req.path),
   message: {
     success: false,
     message: 'Too many requests, please try again later.',
@@ -54,6 +62,20 @@ const loginLimiter = rateLimit({
 });
 app.use(`${apiBase}/auth/login`, loginLimiter);
 app.use(`${apiBase}/auth/oauth`, loginLimiter);
+
+const signupLimiter = rateLimit({
+  windowMs: config.signupRateLimit.windowMs,
+  max: config.signupRateLimit.max,
+  skipSuccessfulRequests: true,
+  message: {
+    success: false,
+    message: 'Too many signup attempts, please try again later.',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use(`${apiBase}/auth/signup`, signupLimiter);
+app.use(`${apiBase}/auth/register`, signupLimiter);
 
 app.get('/health', (_req, res) => {
   res.json({

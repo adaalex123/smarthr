@@ -59,6 +59,10 @@ export const config = {
     windowMs: parseInt(optional('LOGIN_RATE_LIMIT_WINDOW_MS', String(15 * 60 * 1000)), 10),
     max: parseInt(optional('LOGIN_RATE_LIMIT_MAX', '5'), 10),
   },
+  signupRateLimit: {
+    windowMs: parseInt(optional('SIGNUP_RATE_LIMIT_WINDOW_MS', String(15 * 60 * 1000)), 10),
+    max: parseInt(optional('SIGNUP_RATE_LIMIT_MAX', '25'), 10),
+  },
   firebase: {
     serviceAccount: path.resolve(rootDir, required('FIREBASE_SERVICE_ACCOUNT')),
   },
