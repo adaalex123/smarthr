@@ -48,10 +48,7 @@ export default function AllApplicationsPage() {
   useEffect(() => {
     void apiRequest<{ applications?: RecruiterApplication[] }>('/recruiter/applications')
       .then((data) => setApplications(data.applications ?? []))
-      .catch((err) => {
-        console.error('[AllApplications] load failed', err)
-        setError(err)
-      })
+      .catch((err) => setError(err))
       .finally(() => setLoading(false))
   }, [])
 

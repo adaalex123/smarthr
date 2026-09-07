@@ -45,10 +45,7 @@ export default function ApplyJobPage() {
     if (!id) return
     void apiRequest<{ job?: PublicJob }>(`/jobs/${id}`)
       .then((data) => setJob(data.job?? null))
-      .catch((err) => {
-        console.error('[ApplyJob] load job failed', err)
-        setError(err)
-      })
+      .catch((err) => setError(err))
   }, [id])
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -78,7 +75,6 @@ export default function ApplyJobPage() {
       })
       if (data.application) setResult(data.application)
     } catch (err) {
-      console.error('[ApplyJob] submit failed', err)
       setError(err)
     } finally {
       setBusy(false)

@@ -95,10 +95,7 @@ export default function WorkspacePage() {
     setLoading(true)
     void loadAll()
       .then(() => setError(null))
-      .catch((err) => {
-        console.error('[Workspace] load failed', err)
-        setError(err)
-      })
+      .catch((err) => setError(err))
       .finally(() => setLoading(false))
   }, [accessToken])
 
@@ -139,7 +136,6 @@ export default function WorkspacePage() {
         setActiveNav('jobs')
       }
     } catch (err) {
-      console.error('[Workspace] create job failed', err)
       setError(err)
     } finally {
       setBusy(false)
@@ -155,7 +151,6 @@ export default function WorkspacePage() {
       await completeProfile({ fullName: fullName.trim(), phone: phone.trim() || undefined })
       setSaved('Profile saved')
     } catch (err) {
-      console.error('[Workspace] save settings failed', err)
       setError(err)
     } finally {
       setBusy(false)

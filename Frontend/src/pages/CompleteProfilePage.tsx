@@ -80,7 +80,6 @@ export default function CompleteProfilePage() {
       const next = await completeProfile({ fullName: fullName.trim(), phone: phone.trim() || undefined })
       navigate(homePath(next.role))
     } catch (err) {
-      console.error('[CompleteProfile] save failed', err)
       setErrors(apiErrorFields(err))
       setError(err)
     } finally {

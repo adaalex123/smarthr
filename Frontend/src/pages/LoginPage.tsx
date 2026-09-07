@@ -28,7 +28,6 @@ export default function LoginPage() {
     try {
       go(await login(email, password))
     } catch (err) {
-      console.error('[LoginPage] login failed', err)
       setError(err)
     } finally {
       setBusy(false)
@@ -41,7 +40,6 @@ export default function LoginPage() {
     try {
       go(await googleAuth())
     } catch (err) {
-      console.error('[LoginPage] Google sign-in failed', err)
       setError(err)
     } finally {
       setBusy(false)

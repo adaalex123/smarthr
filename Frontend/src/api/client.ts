@@ -39,9 +39,35 @@ function buildLogPrefix(method: string, path: string, status: number) {
   return `[API ERROR] ${method.toUpperCase()} ${path} → ${status}`
 }
 
+// Deduplicate identical errors within 2s to avoid flooding console on parallel requests
+const recentLogs = new Map<string, number>()
+function shouldLog(prefix: string): boolean {
+  const now = Date.now()
+  const last = recentLogs.get(prefix) ?? 0
+  if (now - last < 2000) return false
+  recentLogs.set(prefix, now)
+  // cleanup old entries
+  for (const [k, t] of recentLogs) if (now - t > 10000) recentLogs.delete(k)
+  return true
+}
+
 export function logApiError(error: ApiError) {
   const prefix = buildLogPrefix(error.method, error.path, error.status)
-  // Always print detailed error for developer visibility
+  // Deduplicate spamming logs (e.g. 5 parallel dashboard requests all 401)
+  if (!shouldLog(`${prefix}:${error.message}`)) return
+
+  // 401 is expected when session expires - log as warn, not error group, to reduce noise
+  if (error.status === 401) {
+    console.warn(`${prefix} ${error.message}`, {
+      status: error.status,
+      path: error.path,
+      method: error.method,
+      data: error.data,
+    })
+    return
+  }
+
+  // For other errors, show collapsed group (single entry, not duplicated fallback)
   console.groupCollapsed(`%c${prefix} %c${error.message}`, 'color:#b85448;font-weight:900', 'color:#5f736f;font-weight:600')
   console.error('Message:', error.message)
   console.error('Status:', error.status)
@@ -53,54 +79,62 @@ export function logApiError(error: ApiError) {
     console.table(error.fieldErrors)
   }
   console.error('Raw payload:', error.data)
-  console.error('Full error object:', error)
   console.groupEnd()
-
-  // Also single-line fallback for environments where groupCollapsed is not visible
-  console.error(prefix, {
-    message: error.message,
-    status: error.status,
-    path: error.path,
-    method: error.method,
-    errors: error.fieldErrors,
-    data: error.data,
-  })
 }
 
 function logNetworkError(path: string, method: string, err: unknown) {
-  console.groupCollapsed(`%c[API NETWORK ERROR] %c${method.toUpperCase()} ${path}`, 'color:#b85448;font-weight:900', 'color:#5f736f')
-  console.error('Network / parsing failure - no response from server')
-  console.error('Path:', path)
-  console.error('Method:', method)
-  console.error('Error:', err)
-  console.groupEnd()
+  const key = `[API NETWORK ERROR] ${method} ${path}`
+  if (!shouldLog(key)) return
+  console.warn(`${key} - Network / parsing failure`, err)
 }
 
+// Shared refresh promise to dedupe parallel 401s
+let pendingRefresh: Promise<boolean> | null = null
+
 async function refreshSession(): Promise<boolean> {
+  if (pendingRefresh) return pendingRefresh
   const refreshToken = localStorage.getItem('refreshToken')
   if (!refreshToken) return false
 
-  try {
-    const res = await fetch(`${API_BASE}/auth/refresh-token`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ refreshToken }),
-    })
-    if (!res.ok) {
-      console.warn('[API] refresh-token failed:', res.status, res.statusText)
+  pendingRefresh = (async () => {
+    try {
+      const res = await fetch(`${API_BASE}/auth/refresh-token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ refreshToken }),
+      })
+      if (!res.ok) {
+        // Only warn once per failure window
+        if (shouldLog(`refresh:${res.status}`)) {
+          console.warn('[API] refresh-token failed:', res.status, res.statusText)
+        }
+        // If refresh is rejected as unauthorized, clear stale session to avoid loops
+        if (res.status === 401) {
+          localStorage.removeItem('accessToken')
+          localStorage.removeItem('refreshToken')
+          localStorage.removeItem('user')
+        }
+        return false
+      }
+      const data = (await res.json()) as AuthResponse
+      if (!data.accessToken || !data.refreshToken) return false
+      localStorage.setItem('accessToken', data.accessToken)
+      localStorage.setItem('refreshToken', data.refreshToken)
+      if (data.user) localStorage.setItem('user', JSON.stringify(data.user))
+      return true
+    } catch (err) {
+      if (shouldLog('refresh:network')) console.warn('[API] refresh-token network error', err)
       return false
+    } finally {
+      // allow next refresh after a short cooldown
+      setTimeout(() => { pendingRefresh = null }, 500)
     }
-    const data = (await res.json()) as AuthResponse
-    if (!data.accessToken || !data.refreshToken) return false
-    localStorage.setItem('accessToken', data.accessToken)
-    localStorage.setItem('refreshToken', data.refreshToken)
-    if (data.user) localStorage.setItem('user', JSON.stringify(data.user))
-    return true
-  } catch (err) {
-    console.warn('[API] refresh-token network error', err)
-    return false
-  }
+  })()
+
+  const result = await pendingRefresh
+  if (result) pendingRefresh = null
+  return result
 }
 
 export async function apiRequest<T = AuthResponse>(

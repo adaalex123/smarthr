@@ -97,7 +97,6 @@ export default function SignupPage() {
         }), navigate)
       }
     } catch (error) {
-      console.error('[SignupPage] signup failed', error)
       setErrors(apiErrorFields(error))
       setServerError(error)
     } finally {
@@ -115,7 +114,6 @@ export default function SignupPage() {
     try {
       afterAuth(await googleAuth(role), navigate)
     } catch (error) {
-      console.error('[SignupPage] Google sign-in failed', error)
       setServerError(error)
     } finally {
       setBusy(false)

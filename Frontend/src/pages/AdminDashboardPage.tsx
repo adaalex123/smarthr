@@ -52,7 +52,6 @@ export default function AdminDashboardPage() {
       setStats(dashboard.data ?? null)
       setUsers(usersData.users ?? [])
     } catch (err) {
-      console.error('[Admin] load failed', err)
       setError(err)
     } finally {
       setLoading(false)
@@ -70,7 +69,6 @@ export default function AdminDashboardPage() {
       })
       setUsers((current) => current.map((u) => (u.id === target.id ? { ...u, status } : u)))
     } catch (err) {
-      console.error('[Admin] update status failed', err)
       setError(err)
     } finally {
       setUpdatingUserId(null)

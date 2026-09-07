@@ -83,10 +83,7 @@ export default function CandidateDashboardPage() {
     setLoading(true)
     void loadAll()
       .then(() => setError(null))
-      .catch((err) => {
-        console.error('[CandidateDashboard] load failed', err)
-        setError(err)
-      })
+      .catch((err) => setError(err))
       .finally(() => setLoading(false))
   }, [accessToken])
 
@@ -121,7 +118,6 @@ export default function CandidateDashboardPage() {
       await completeProfile({ fullName: fullName.trim(), phone: phone.trim() || undefined })
       setSaved('Profile saved')
     } catch (err) {
-      console.error('[CandidateDashboard] save profile failed', err)
       setError(err)
     } finally {
       setBusy(false)
