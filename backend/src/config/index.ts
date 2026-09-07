@@ -16,7 +16,11 @@ function optional(name: string, fallback: string): string {
   return value === undefined || value === '' ? fallback : value;
 }
 
-function parseOrigin(value: string): string | string[] {
+function parseOrigin(value: string): boolean | string | string[] {
+  if (value.trim() === '*' || value.trim().toLowerCase() === 'all') {
+    return true;
+  }
+
   const origins = value.split(',').map((origin) => origin.trim()).filter(Boolean);
   return origins.length === 1 ? origins[0] : origins;
 }
@@ -48,7 +52,7 @@ export const config = {
     refreshMaxAge: refreshExpiresDays * 24 * 60 * 60 * 1000,
   },
   cors: {
-    origin: parseOrigin(required('CORS_ORIGIN')),
+    origin: parseOrigin(optional('CORS_ORIGIN', '*')),
     credentials: true,
   },
   rateLimit: {
