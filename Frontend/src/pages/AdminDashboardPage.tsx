@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../AuthContext'
 import { apiRequest } from '../api/client'
+import ApiErrorBanner from '../components/ApiErrorBanner'
 import '../styles/admin-dashboard.css'
 
 type AdminUser = {
@@ -29,7 +30,7 @@ export default function AdminDashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [updatingUserId, setUpdatingUserId] = useState<number | null>(null)
-  const [error, setError] = useState('')
+  const [error, setError] = useState<unknown>(null)
   const [activeNav, setActiveNav] = useState('dashboard')
 
   useEffect(() => {
@@ -42,7 +43,7 @@ export default function AdminDashboardPage() {
 
   async function loadData() {
     setLoading(true)
-    setError('')
+    setError(null)
     try {
       const [dashboard, usersData] = await Promise.all([
         apiRequest<{ data?: DashboardStats }>('/admin/dashboard'),
@@ -51,7 +52,8 @@ export default function AdminDashboardPage() {
       setStats(dashboard.data ?? null)
       setUsers(usersData.users ?? [])
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not load admin dashboard')
+      console.error('[Admin] load failed', err)
+      setError(err)
     } finally {
       setLoading(false)
     }
@@ -60,7 +62,7 @@ export default function AdminDashboardPage() {
   async function updateStatus(target: AdminUser, status: AdminUser['status']) {
     if (target.status === status) return
     setUpdatingUserId(target.id)
-    setError('')
+    setError(null)
     try {
       await apiRequest(`/admin/users/${target.id}`, {
         method: 'PUT',
@@ -68,7 +70,8 @@ export default function AdminDashboardPage() {
       })
       setUsers((current) => current.map((u) => (u.id === target.id ? { ...u, status } : u)))
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not update user status')
+      console.error('[Admin] update status failed', err)
+      setError(err)
     } finally {
       setUpdatingUserId(null)
     }
@@ -147,7 +150,7 @@ export default function AdminDashboardPage() {
           <button type="button" className="ad-topbar-btn" onClick={() => void loadData()}>Refresh</button>
         </header>
 
-        {error && <div className="ad-banner">{error}</div>}
+        <ApiErrorBanner error={error} onDismiss={() => setError(null)} />
 
         {/* Stat cards */}
         <div className="ad-stat-row">

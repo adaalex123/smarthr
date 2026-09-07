@@ -2,6 +2,7 @@ import { Fragment, useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../AuthContext'
 import { apiRequest } from '../api/client'
+import ApiErrorBanner from '../components/ApiErrorBanner'
 import type { RecruiterApplication, RankingExplanation } from '../types/jobs'
 import '../styles/recruiter-workspace.css'
 
@@ -40,14 +41,17 @@ export default function AllApplicationsPage() {
   const navigate = useNavigate()
   const [applications, setApplications] = useState<RecruiterApplication[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
+  const [error, setError] = useState<unknown>(null)
   const [openId, setOpenId] = useState<number | null>(null)
   const [filters, setFilters] = useState<Filters>({ jobId: '', minScore: '', search: '' })
 
   useEffect(() => {
     void apiRequest<{ applications?: RecruiterApplication[] }>('/recruiter/applications')
       .then((data) => setApplications(data.applications ?? []))
-      .catch((err) => setError(err instanceof Error ? err.message : 'Could not load applications'))
+      .catch((err) => {
+        console.error('[AllApplications] load failed', err)
+        setError(err)
+      })
       .finally(() => setLoading(false))
   }, [])
 
@@ -92,7 +96,7 @@ export default function AllApplicationsPage() {
         </div>
       </header>
 
-      {error && <div className="rw-banner">{error}</div>}
+      <ApiErrorBanner error={error} onDismiss={() => setError(null)} />
 
       <section className="rw-card">
         <div className="rw-filters">

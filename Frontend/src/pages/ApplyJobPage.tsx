@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent, type ChangeEvent } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useAuth } from '../AuthContext'
 import { apiRequest } from '../api/client'
+import ApiErrorBanner from '../components/ApiErrorBanner'
 import { homePath } from '../types/auth'
 import type { PublicJob, RankingExplanation } from '../types/jobs'
 import '../styles/recruiter-workspace.css'
@@ -25,7 +26,7 @@ export default function ApplyJobPage() {
     resumeFile: null as File | null,
   })
 
-  const [error, setError] = useState('')
+  const [error, setError] = useState<unknown>(null)
   const [busy, setBusy] = useState(false)
   const [result, setResult] = useState<ApplyResult | null>(null)
   const signedIn = Boolean(user)
@@ -43,8 +44,11 @@ export default function ApplyJobPage() {
   useEffect(() => {
     if (!id) return
     void apiRequest<{ job?: PublicJob }>(`/jobs/${id}`)
-     .then((data) => setJob(data.job?? null))
-     .catch((err) => setError(err instanceof Error? err.message : 'Job not found'))
+      .then((data) => setJob(data.job?? null))
+      .catch((err) => {
+        console.error('[ApplyJob] load job failed', err)
+        setError(err)
+      })
   }, [id])
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -57,7 +61,7 @@ export default function ApplyJobPage() {
     event.preventDefault()
     if (!id) return
     setBusy(true)
-    setError('')
+    setError(null)
     try {
       const formData = new FormData()
       formData.append('fullName', form.fullName)
@@ -74,7 +78,8 @@ export default function ApplyJobPage() {
       })
       if (data.application) setResult(data.application)
     } catch (err) {
-      setError(err instanceof Error? err.message : 'Could not submit application')
+      console.error('[ApplyJob] submit failed', err)
+      setError(err)
     } finally {
       setBusy(false)
     }
@@ -90,7 +95,7 @@ export default function ApplyJobPage() {
         <Link to="/" className="rw-ghost">Back home</Link>
       </header>
 
-      {error && <div className="rw-banner">{error}</div>}
+      <ApiErrorBanner error={error} onDismiss={() => setError(null)} />
 
       {job &&!result && (
         <div className="rw-grid">

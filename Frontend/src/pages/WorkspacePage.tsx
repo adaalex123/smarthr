@@ -2,6 +2,7 @@ import { Fragment, useEffect, useMemo, useState, type FormEvent } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '../AuthContext'
 import { apiRequest } from '../api/client'
+import ApiErrorBanner from '../components/ApiErrorBanner'
 import RichTextarea from '../components/RichTextarea'
 import type {
   EmployerCandidate,
@@ -63,7 +64,7 @@ export default function WorkspacePage() {
   const [candidates, setCandidates] = useState<EmployerCandidate[]>([])
   const [messages, setMessages] = useState<Array<{ id: number; subject: string }>>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
+  const [error, setError] = useState<unknown>(null)
   const [form, setForm] = useState(emptyJob)
   const [busy, setBusy] = useState(false)
   const [openWhy, setOpenWhy] = useState<number | null>(null)
@@ -93,8 +94,11 @@ export default function WorkspacePage() {
     if (!accessToken) return
     setLoading(true)
     void loadAll()
-      .then(() => setError(''))
-      .catch((err) => setError(err instanceof Error ? err.message : 'Could not load employer workspace'))
+      .then(() => setError(null))
+      .catch((err) => {
+        console.error('[Workspace] load failed', err)
+        setError(err)
+      })
       .finally(() => setLoading(false))
   }, [accessToken])
 
@@ -122,7 +126,7 @@ export default function WorkspacePage() {
   async function onCreateJob(event: FormEvent) {
     event.preventDefault()
     setBusy(true)
-    setError('')
+    setError(null)
     try {
       const data = await apiRequest<{ job?: JobSummary }>('/employer/jobs', {
         method: 'POST',
@@ -135,7 +139,8 @@ export default function WorkspacePage() {
         setActiveNav('jobs')
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not create job')
+      console.error('[Workspace] create job failed', err)
+      setError(err)
     } finally {
       setBusy(false)
     }
@@ -144,13 +149,14 @@ export default function WorkspacePage() {
   async function onSaveSettings(event: FormEvent) {
     event.preventDefault()
     setBusy(true)
-    setError('')
+    setError(null)
     setSaved('')
     try {
       await completeProfile({ fullName: fullName.trim(), phone: phone.trim() || undefined })
       setSaved('Profile saved')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not save settings')
+      console.error('[Workspace] save settings failed', err)
+      setError(err)
     } finally {
       setBusy(false)
     }
@@ -192,7 +198,7 @@ export default function WorkspacePage() {
           </button>
         </header>
 
-        {error && <div className="ed-banner">{error}</div>}
+        <ApiErrorBanner error={error} onDismiss={() => setError(null)} />
         {saved && <div className="ed-success">{saved}</div>}
         {loading && <p className="ed-muted">Loading...</p>}
 

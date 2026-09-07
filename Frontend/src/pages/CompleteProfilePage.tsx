@@ -6,6 +6,7 @@ import {
   RECRUITER_JOB_TITLES,
   emptyRecruiterSignupForm,
 } from '../constants/recruiterSignup'
+import ApiErrorBanner from '../components/ApiErrorBanner'
 import { apiErrorFields } from '../api/client'
 import { useAuth } from '../AuthContext'
 import { homePath, isHiringRole, needsProfile } from '../types/auth'
@@ -35,7 +36,7 @@ export default function CompleteProfilePage() {
     linkedIn: user?.recruiterProfile?.linkedIn ?? '',
   }))
   const [errors, setErrors] = useState<Record<string, string>>({})
-  const [error, setError] = useState('')
+  const [error, setError] = useState<unknown>(null)
   const [busy, setBusy] = useState(false)
 
   if (!accessToken) return <Navigate to="/login" replace />
@@ -44,7 +45,7 @@ export default function CompleteProfilePage() {
   async function onSubmit(event: FormEvent) {
     event.preventDefault()
     setBusy(true)
-    setError('')
+    setError(null)
     setErrors({})
 
     try {
@@ -79,8 +80,9 @@ export default function CompleteProfilePage() {
       const next = await completeProfile({ fullName: fullName.trim(), phone: phone.trim() || undefined })
       navigate(homePath(next.role))
     } catch (err) {
+      console.error('[CompleteProfile] save failed', err)
       setErrors(apiErrorFields(err))
-      setError(err instanceof Error ? err.message : 'Could not save profile')
+      setError(err)
     } finally {
       setBusy(false)
     }
@@ -121,7 +123,7 @@ export default function CompleteProfilePage() {
               ? 'Tell us about you and the company you hire for before accessing your workspace.'
               : 'Finish your profile so we know who you are.'}
           </p>
-          {error && <div className="auth-banner-inline">{error}</div>}
+          <ApiErrorBanner error={error} onDismiss={() => setError(null)} />
 
           <form onSubmit={onSubmit}>
             {isHiring ? (

@@ -2,6 +2,7 @@ import { Fragment, useEffect, useMemo, useState, type FormEvent } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '../AuthContext'
 import { apiRequest } from '../api/client'
+import ApiErrorBanner from '../components/ApiErrorBanner'
 import type { CandidateApplication, EmployerTrend, RankingExplanation } from '../types/jobs'
 import '../styles/candidate-dashboard.css'
 
@@ -58,7 +59,7 @@ export default function CandidateDashboardPage() {
   const [dashboard, setDashboard] = useState<DashboardData | null>(null)
   const [messages, setMessages] = useState<Array<{ id: number; subject: string }>>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
+  const [error, setError] = useState<unknown>(null)
   const [openWhy, setOpenWhy] = useState<number | null>(null)
   const [fullName, setFullName] = useState(user?.fullName ?? '')
   const [phone, setPhone] = useState(user?.phone ?? '')
@@ -81,8 +82,11 @@ export default function CandidateDashboardPage() {
     if (!accessToken) return
     setLoading(true)
     void loadAll()
-      .then(() => setError(''))
-      .catch((err) => setError(err instanceof Error ? err.message : 'Could not load candidate dashboard'))
+      .then(() => setError(null))
+      .catch((err) => {
+        console.error('[CandidateDashboard] load failed', err)
+        setError(err)
+      })
       .finally(() => setLoading(false))
   }, [accessToken])
 
@@ -111,13 +115,14 @@ export default function CandidateDashboardPage() {
   async function onSaveProfile(event: FormEvent) {
     event.preventDefault()
     setBusy(true)
-    setError('')
+    setError(null)
     setSaved('')
     try {
       await completeProfile({ fullName: fullName.trim(), phone: phone.trim() || undefined })
       setSaved('Profile saved')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not save profile')
+      console.error('[CandidateDashboard] save profile failed', err)
+      setError(err)
     } finally {
       setBusy(false)
     }
@@ -157,7 +162,7 @@ export default function CandidateDashboardPage() {
           <Link to="/" className="cd-topbar-btn">Browse jobs</Link>
         </header>
 
-        {error && <div className="cd-banner">{error}</div>}
+        <ApiErrorBanner error={error} onDismiss={() => setError(null)} />
         {saved && <div className="cd-success">{saved}</div>}
         {loading && <p className="cd-muted">Loading...</p>}
 

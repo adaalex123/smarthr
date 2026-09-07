@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '../AuthContext'
+import ApiErrorBanner from '../components/ApiErrorBanner'
 import { homePath, needsProfile } from '../types/auth'
 import '../styles/login.css'
 
@@ -9,7 +10,7 @@ export default function LoginPage() {
   const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
+  const [error, setError] = useState<unknown>(null)
   const [busy, setBusy] = useState(false)
 
   if (accessToken && user) {
@@ -23,11 +24,12 @@ export default function LoginPage() {
   async function onSubmit(event: FormEvent) {
     event.preventDefault()
     setBusy(true)
-    setError('')
+    setError(null)
     try {
       go(await login(email, password))
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not log in')
+      console.error('[LoginPage] login failed', err)
+      setError(err)
     } finally {
       setBusy(false)
     }
@@ -35,11 +37,12 @@ export default function LoginPage() {
 
   async function onGoogle() {
     setBusy(true)
-    setError('')
+    setError(null)
     try {
       go(await googleAuth())
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Google sign-in failed')
+      console.error('[LoginPage] Google sign-in failed', err)
+      setError(err)
     } finally {
       setBusy(false)
     }
@@ -82,7 +85,7 @@ export default function LoginPage() {
           <h2>Welcome back</h2>
           <div className="subtitle">Use the email connected to your SmartHR account.</div>
 
-          {error && <div className="banner">{error}</div>}
+          <ApiErrorBanner error={error} onDismiss={() => setError(null)} />
 
           <form onSubmit={onSubmit}>
             <div className="form-group">

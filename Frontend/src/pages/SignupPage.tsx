@@ -6,6 +6,7 @@ import {
   RECRUITER_JOB_TITLES,
   emptyRecruiterSignupForm,
 } from '../constants/recruiterSignup'
+import ApiErrorBanner from '../components/ApiErrorBanner'
 import { apiErrorFields } from '../api/client'
 import { useAuth } from '../AuthContext'
 import type { UserRole } from '../types/auth'
@@ -47,7 +48,7 @@ export default function SignupPage() {
   const [basicForm, setBasicForm] = useState({ email: '', password: '', confirmPassword: '' })
   const [recruiterForm, setRecruiterForm] = useState(emptyRecruiterSignupForm)
   const [errors, setErrors] = useState<Record<string, string>>({})
-  const [serverError, setServerError] = useState('')
+  const [serverError, setServerError] = useState<unknown>(null)
   const [busy, setBusy] = useState(false)
   const [terms, setTerms] = useState(false)
 
@@ -76,7 +77,7 @@ export default function SignupPage() {
     if (Object.keys(nextErrors).length) return
 
     setBusy(true)
-    setServerError('')
+    setServerError(null)
     try {
       if (isHiring) {
         afterAuth(await signup({
@@ -96,8 +97,9 @@ export default function SignupPage() {
         }), navigate)
       }
     } catch (error) {
+      console.error('[SignupPage] signup failed', error)
       setErrors(apiErrorFields(error))
-      setServerError(error instanceof Error ? error.message : 'Could not create your account')
+      setServerError(error)
     } finally {
       setBusy(false)
     }
@@ -109,11 +111,12 @@ export default function SignupPage() {
       return
     }
     setBusy(true)
-    setServerError('')
+    setServerError(null)
     try {
       afterAuth(await googleAuth(role), navigate)
     } catch (error) {
-      setServerError(error instanceof Error ? error.message : 'Google sign-in failed')
+      console.error('[SignupPage] Google sign-in failed', error)
+      setServerError(error)
     } finally {
       setBusy(false)
     }
@@ -161,7 +164,7 @@ export default function SignupPage() {
           <div className="signup-section-label">
             Step 2: {isHiring ? 'Your profile & company details' : 'Create Your Account'}
           </div>
-          {serverError && <div className="auth-banner-inline">{serverError}</div>}
+          <ApiErrorBanner error={serverError} onDismiss={() => setServerError(null)} />
 
           <form className="dynamic-form" onSubmit={onSubmit}>
             {isHiring ? (
