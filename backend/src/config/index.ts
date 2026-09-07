@@ -21,11 +21,15 @@ function parseOrigin(value: string): boolean | string | string[] {
     return true;
   }
 
-  const origins = value.split(',').map((origin) => origin.trim()).filter(Boolean);
+  const origins = value
+    .split(',')
+    .map((origin) => origin.trim().replace(/\/+$/, ''))
+    .filter(Boolean);
   return origins.length === 1 ? origins[0] : origins;
 }
 
 const refreshExpiresDays = parseInt(optional('JWT_REFRESH_EXPIRES_DAYS', '7'), 10);
+const allowAllCors = optional('CORS_ALLOW_ALL', 'true') === 'true';
 
 export const config = {
   env: envName,
@@ -52,7 +56,7 @@ export const config = {
     refreshMaxAge: refreshExpiresDays * 24 * 60 * 60 * 1000,
   },
   cors: {
-    origin: parseOrigin(optional('CORS_ORIGIN', '*')),
+    origin: allowAllCors ? true : parseOrigin(optional('CORS_ORIGIN', '*')),
     credentials: true,
   },
   rateLimit: {
