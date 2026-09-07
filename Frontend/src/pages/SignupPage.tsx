@@ -22,6 +22,7 @@ import '../styles/signup.css'
 const ROLES: { id: UserRole; icon: string; title: string; desc: string }[] = [
   { id: 'candidate', icon: 'CA', title: 'Candidate', desc: 'Apply to roles and review your match details.' },
   { id: 'recruiter', icon: 'RE', title: 'Recruiter', desc: 'Post jobs, rank applicants, and manage your hiring workspace.' },
+  { id: 'employer', icon: 'EM', title: 'Employer', desc: 'Post company jobs, manage candidates and hiring pipeline.' },
   { id: 'admin', icon: 'AD', title: 'Admin', desc: 'Manage users, account status, and platform access.' },
 ]
 
@@ -38,11 +39,9 @@ export default function SignupPage() {
   const navigate = useNavigate()
   const [params] = useSearchParams()
   const preset = params.get('role')
-  const initialRole = preset === 'admin' || preset === 'candidate' || preset === 'recruiter'
-    ? preset
-    : preset === 'employer'
-      ? 'recruiter'
-      : null
+  const initialRole = preset === 'admin' || preset === 'candidate' || preset === 'recruiter' || preset === 'employer'
+    ? (preset as UserRole)
+    : null
 
   const [role, setRole] = useState<UserRole | null>(initialRole)
   const [basicForm, setBasicForm] = useState({ email: '', password: '', confirmPassword: '' })
@@ -127,9 +126,10 @@ export default function SignupPage() {
           <img className="bg-img" src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="HR team" />
           <div className="logo">SmartHR</div>
           <div className="brand-tagline">Choose the workspace that fits your day.</div>
-          <div className="brand-copy">One account flow, three clear destinations: candidate dashboard, recruiter workspace, or admin console.</div>
+          <div className="brand-copy">One account flow, four clear destinations: candidate dashboard, recruiter workspace, employer workspace, or admin console.</div>
           <div className="stats-grid">
             <div className="stat-item"><div className="label">Recruiter</div><div className="value">Create jobs <small>and review applicants</small></div></div>
+            <div className="stat-item"><div className="label">Employer</div><div className="value">Post roles <small>and manage hiring</small></div></div>
             <div className="stat-item"><div className="label">Candidate</div><div className="value">Apply faster <small>with a reusable profile</small></div></div>
             <div className="stat-item"><div className="label">Admin</div><div className="value">Control access <small>from one console</small></div></div>
           </div>
@@ -149,7 +149,7 @@ export default function SignupPage() {
               <button
                 key={item.id}
                 type="button"
-                className={`role-card${role === item.id ? ' active' : ''}${item.id === 'admin' ? ' full-width' : ''}`}
+                className={`role-card${role === item.id ? ' active' : ''}`}
                 onClick={() => { setRole(item.id); setErrors({}) }}
               >
                 <span className="role-card-symbol">{item.icon}</span>

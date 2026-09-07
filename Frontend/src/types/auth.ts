@@ -38,6 +38,8 @@ export function isHiringRole(role: string): role is HiringRole {
 export function homePath(role: UserRole) {
   if (role === 'admin') return '/admin'
   if (role === 'candidate') return '/candidate'
+  if (role === 'recruiter') return '/employer'
+  if (role === 'employer') return '/employer'
   return '/employer'
 }
 

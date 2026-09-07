@@ -71,9 +71,16 @@ export default function WorkspacePage() {
   const [fullName, setFullName] = useState(user?.fullName ?? '')
   const [phone, setPhone] = useState(user?.phone ?? '')
   const [saved, setSaved] = useState('')
+  const [jobSuccess, setJobSuccess] = useState('')
 
   const displayName = user?.fullName || user?.email?.split('@')[0] || 'Employer'
   const initials = displayName.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase()
+
+  // Keep profile form in sync if user loads async
+  useEffect(() => {
+    if (user?.fullName) setFullName(user.fullName)
+    if (user?.phone) setPhone(user.phone)
+  }, [user?.fullName, user?.phone])
 
   async function loadAll() {
     const [dash, jobsData, appsData, candidatesData, messagesData] = await Promise.all([
@@ -122,18 +129,50 @@ export default function WorkspacePage() {
 
   async function onCreateJob(event: FormEvent) {
     event.preventDefault()
+    event.stopPropagation()
+    // Guard: only hiring roles should create jobs - prevents candidate redirect glitch
+    if (user && user.role === 'candidate') {
+      setError('Only recruiters can create jobs. Please use a recruiter account.')
+      return
+    }
+    // Basic front validation to avoid server round-trip
+    if (!form.title.trim() || form.title.trim().length < 3) {
+      setError('Job title is required (at least 3 characters)')
+      return
+    }
+    if (!form.description.trim() || form.description.trim().length < 40) {
+      setError('Job description must be at least 40 characters')
+      return
+    }
+    if (!form.requirements.trim()) {
+      setError('Required skills are required')
+      return
+    }
     setBusy(true)
     setError(null)
+    setJobSuccess('')
     try {
       const data = await apiRequest<{ job?: JobSummary }>('/employer/jobs', {
         method: 'POST',
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          title: form.title.trim(),
+          description: form.description.trim(),
+          requirements: form.requirements.trim(),
+          location: form.location.trim(),
+        }),
       })
       if (data.job) {
+        // Optimistic update - stay on employer workspace, do NOT navigate to candidate dashboard
         setJobs((current) => [data.job!, ...current])
         setForm(emptyJob)
-        await loadAll()
+        setJobSuccess(`Job "${data.job.title}" published successfully`)
         setActiveNav('jobs')
+        // Refresh stats in background without blocking UI and without risking redirect
+        void loadAll()
+          .then(() => setError(null))
+          .catch(() => {
+            // background refresh failure should not redirect - just keep optimistic data
+          })
       }
     } catch (err) {
       setError(err)
@@ -194,6 +233,7 @@ export default function WorkspacePage() {
         </header>
 
         <ApiErrorBanner error={error} onDismiss={() => setError(null)} />
+        {jobSuccess && <div className="ed-success">{jobSuccess}</div>}
         {saved && <div className="ed-success">{saved}</div>}
         {loading && <p className="ed-muted">Loading...</p>}
 

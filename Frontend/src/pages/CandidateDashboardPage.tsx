@@ -69,6 +69,11 @@ export default function CandidateDashboardPage() {
   const displayName = user?.fullName || user?.email?.split('@')[0] || 'Candidate'
   const initials = displayName.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase()
 
+  useEffect(() => {
+    if (user?.fullName) setFullName(user.fullName)
+    if (user?.phone) setPhone(user.phone)
+  }, [user?.fullName, user?.phone])
+
   async function loadAll() {
     const [dash, messagesData] = await Promise.all([
       apiRequest<DashboardData>('/candidate/dashboard'),
